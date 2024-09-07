@@ -1,26 +1,29 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
 }
+global $config;
 //SQL-Library
-include './language/'.$config['language'].'/lang_sql.php';
+require './language/'.$config['language'].'/lang_sql.php';
 /*
 Template
 if $sqllib[$i]['sql'] =trenn, Then it is a Heading
@@ -39,7 +42,10 @@ $sqllib[$i]['name'] = $lang['L_SQLLIB_RESETAUTO'];
 $sqllib[$i]['sql'] = 'ALTER TABLE `table` AUTO_INCREMENT=1;';
 ++$i;
 
-/********* phpBB-Boards *********************************/
+/*********
+*
+ * phpBB-Boards
+*********************************/
 $sqllib[$i]['name'] = 'phpBB-'.$lang['L_SQLLIB_BOARDS'];
 $sqllib[$i]['sql'] = 'trenn';
 ++$i;

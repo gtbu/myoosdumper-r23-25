@@ -1,20 +1,22 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
@@ -319,7 +321,7 @@ function GetMySQLVersion()
     $res = mod_query('SELECT VERSION()');
     $row = mysqli_fetch_array($res);
     $str = $row[0];
-    $version = str_replace(':', '--', $str);
+    $version = str_replace(':', '--', (string) $str);
     if (!defined('MOD_MYSQL_VERSION')) {
         define('MOD_MYSQL_VERSION', $version);
     }
@@ -438,7 +440,7 @@ function Fieldlist($db, $tbl)
             $row = mysqli_fetch_row($res);
             $fl .= '`'.$row[0].'`,';
         }
-        $fl = substr($fl, 0, strlen($fl) - 1).')';
+        $fl = substr($fl, 0, strlen($fl ?? '') - 1).')';
     }
     return $fl;
 }
@@ -447,7 +449,7 @@ function Fieldlist($db, $tbl)
 function getDBInfos()
 {
     global $databases, $dump, $config, $tbl_sel, $flipped;
-    for ($ii = 0; $ii < count($databases['multi']); ++$ii) {
+    for ($ii = 0; $ii < (is_countable($databases['multi']) ? count($databases['multi']) : 0); ++$ii) {
         $dump['dbindex'] = $flipped[$databases['multi'][$ii]];
         $tabellen = mysqli_query($config['dbconnection'], 'SHOW TABLE STATUS FROM `'.$databases['Name'][$dump['dbindex']].'`') or exit('getDBInfos: '.mysqli_error($config['dbconnection']));
         $num_tables = mysqli_num_rows($tabellen);
@@ -458,19 +460,24 @@ function getDBInfos()
                 if (isset($row['Type'])) {
                     $row['Engine'] = $row['Type'];
                 }
-                if (isset($row['Comment']) && 'VIEW' == substr(strtoupper($row['Comment']), 0, 4)) {
+                if (isset($row['Comment']) && str_starts_with(strtoupper((string) $row['Comment']), 'VIEW')) {
                     $dump['table_types'][] = 'VIEW';
                 } else {
-                    $dump['table_types'][] = strtoupper($row['Engine']);
+                    $dump['table_types'][] = strtoupper((string) $row['Engine']);
                 }
                 // check if data needs to be backed up
-                if ('VIEW' == strtoupper($row['Comment']) || (isset($row['Engine']) && in_array(strtoupper($row['Engine']), [
+                if ('VIEW' == strtoupper((string) $row['Comment']) || (isset($row['Engine']) && in_array(
+                    strtoupper((string) $row['Engine']),
+                    [
                     'MEMORY',
-                ]))) {
+                    ]
+                ))
+                ) {
                     $dump['skip_data'][] = $databases['Name'][$dump['dbindex']].'|'.$row['Name'];
                 }
                 if ((isset($config['optimize_tables_beforedump']) && (1 == $config['optimize_tables_beforedump'])) && -1 == $dump['table_offset']
-                        && 'information_schema' != $databases['Name'][$dump['dbindex']]) {
+                    && 'information_schema' != $databases['Name'][$dump['dbindex']]
+                ) {
                     mysqli_select_db($config['dbconnection'], $databases['Name'][$dump['dbindex']]);
                     $opt = 'OPTIMIZE TABLE `'.$row['Name'].'`';
                     $res = mysqli_query($config['dbconnection'], 'OPTIMIZE TABLE `'.$row['Name'].'`');
@@ -486,7 +493,7 @@ function getDBInfos()
                         $dump['totalrecords'] += $row['Rows'];
                     }
                 } elseif ('' != $databases['praefix'][$dump['dbindex']] && !isset($tbl_sel)) {
-                    if (substr($row['Name'], 0, strlen($databases['praefix'][$dump['dbindex']])) == $databases['praefix'][$dump['dbindex']]) {
+                    if (substr((string) $row['Name'], 0, strlen($databases['praefix'][$dump['dbindex']] ?? '')) == $databases['praefix'][$dump['dbindex']]) {
                         $dump['tables'][] = $databases['Name'][$dump['dbindex']].'|'.$row['Name'];
                         $dump['records'][] = $databases['Name'][$dump['dbindex']].'|'.$row['Rows'];
                         $dump['totalrecords'] += $row['Rows'];
@@ -521,13 +528,13 @@ function getDBInfos()
                 for ($a = 0; $a < $count; ++$a) {
                     if ($dump['tables'][$a] == $skip_data) {
                         $index = $a;
-                        $t = explode('|', $dump['records'][$a]);
+                        $t = explode('|', (string) $dump['records'][$a]);
                         $rekords_to_skip = $t[1];
                         break;
                     }
                 }
                 if ($index) {
-                    $dump['totalrecords'] -= $rekords_to_skip;
+                    $dump['totalrecords'] -= intval($rekords_to_skip);
                 }
             }
         }

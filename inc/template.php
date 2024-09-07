@@ -1,20 +1,22 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
@@ -28,17 +30,13 @@ define('TPL_DEBUG', 0); // used if evaluationg of template fails
  *   email                : support@phpbb.com
  *
  *   $Id: template.php 1330 2011-01-07 17:51:25Z dsb1971 $
- *
- *
  ***************************************************************************/
 
 /***************************************************************************
- *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation; either version 2 of the License, or
  *   (at your option) any later version.
- *
  ***************************************************************************/
 
 /**
@@ -141,7 +139,7 @@ class MODTemplate
 
         // Run the compiled code.
         if (defined(TPL_DEBUG) && TPL_DEBUG > 0) {
-            echo '<pre>'.htmlspecialchars($this->compiled_code[$handle]).'</pre>';
+            echo '<pre>'.htmlspecialchars((string) $this->compiled_code[$handle]).'</pre>';
         }
         eval($this->compiled_code[$handle]);
         return true;
@@ -180,9 +178,9 @@ class MODTemplate
      */
     public function assign_block_vars($blockname, $vararray)
     {
-        if (strstr($blockname, '.')) {
+        if (strstr((string) $blockname, '.')) {
             // Nested block.
-            $blocks = explode('.', $blockname);
+            $blocks = explode('.', (string) $blockname);
             $blockcount = sizeof($blocks) - 1;
             $str = '$this->_tpldata';
             for ($i = 0; $i < $blockcount; ++$i) {
@@ -291,7 +289,7 @@ class MODTemplate
     public function compile($code, $do_not_echo = false, $retvar = '')
     {
         // replace \ with \\ and then ' with \'.
-        $code = str_replace('\\', '\\\\', $code);
+        $code = str_replace('\\', '\\\\', (string) $code);
         $code = str_replace('\'', '\\\'', $code);
 
         // change template varrefs into PHP varrefs
@@ -412,7 +410,7 @@ class MODTemplate
     public function generate_block_varref($namespace, $varname)
     {
         // Strip the trailing period.
-        $namespace = substr($namespace, 0, strlen($namespace) - 1);
+        $namespace = substr((string) $namespace, 0, strlen($namespace ?? '') - 1);
 
         // Get a reference to the data block for this namespace.
         $varref = $this->generate_block_data_ref($namespace, true);
@@ -437,7 +435,7 @@ class MODTemplate
     public function generate_block_data_ref($blockname, $include_last_iterator)
     {
         // Get an array of the blocks involved.
-        $blocks = explode('.', $blockname);
+        $blocks = explode('.', (string) $blockname);
         $blockcount = sizeof($blocks) - 1;
         $varref = '$this->_tpldata';
         // Build up the string with everything but the last child.

@@ -1,25 +1,28 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
 }
-$var = (isset($_GET['var'])) ? $_GET['var'] : 'prozesse';
+global $config;
+$var = $_GET['var'] ?? 'prozesse';
 $Titelausgabe = [
 'variables' => $lang['L_VARIABELN'], 'status' => $lang['L_STATUS'], 'prozesse' => $lang['L_PROZESSE'], ];
 echo '<h5>'.$lang['L_MYSQLVARS'].'</h5><strong>'.$Titelausgabe[$var].'</strong>&nbsp;&nbsp;&nbsp;&nbsp;';
@@ -69,8 +72,8 @@ switch ($var) {
             $config['processlist_refresh'] = 2000;
         }
         if (isset($_GET['killid']) && $_GET['killid'] > 0) {
-            $killid = (isset($_GET['killid'])) ? $_GET['killid'] : 0;
-            $wait = (isset($_GET['wait'])) ? $_GET['wait'] : 0;
+            $killid = $_GET['killid'] ?? 0;
+            $wait = $_GET['wait'] ?? 0;
             if (0 == $wait) {
                 $ret = mysqli_query($config['dbconnection'], 'KILL '.$_GET['killid']);
                 $wait = 2;

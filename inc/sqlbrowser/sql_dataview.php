@@ -1,24 +1,28 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
 }
+global $config, $databases;
+
 // fuegt eine Sortierungsnummer hinzu, um die Ausgabereihenfolge der Daten steuern zu koennen
 // (das Feld ENGINE interessiert mich nicht so sehr und muss nicht vorne stehen)
 $keysort = [
@@ -53,19 +57,18 @@ $byte_output = [
 function add_sortkey($name)
 {
     global $keysort;
-    //echo "<br>Uebergeben: ".$name;
+    $name = ucfirst(strtolower($name));
     if (array_key_exists($name, $keysort)) {
-        $ret = $keysort[$name];
+        return $keysort[$name];
     } else {
-        $ret = 0;
+        return false;
     }
-    return $ret;
 }
 
 //Data-View
 echo $aus.'<h4>'.((1 == $showtables) ? $lang['L_SQL_TABLEVIEW'] : $lang['L_SQL_DATAVIEW']).'</h4><p>';
 if (0 == $showtables) {
-    $p = 'sql.php?sql_statement='.urlencode($sql['sql_statement']).'&amp;db='.$db.'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;limitstart='.$limitstart.'&amp;order='.urlencode($order).'&amp;orderdir='.$orderdir.'&amp;tdc='.$tdcompact;
+    $p = 'sql.php?sql_statement='.urlencode((string) $sql['sql_statement']).'&amp;db='.$db.'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;limitstart='.$limitstart.'&amp;order='.urlencode((string) $order).'&amp;orderdir='.$orderdir.'&amp;tdc='.$tdcompact;
     echo '<a href="'.$p.'&amp;mode=new">'.$lang['L_SQL_RECORDNEW'].'</a>&nbsp;&nbsp;&nbsp;&nbsp;';
     echo '<a href="sql.php?db='.$databases['db_actual'].'&amp;dbid='.$dbid.'&amp;tablename='.$tablename.'&amp;context=2">'.$lang['L_SQL_EDIT_TABLESTRUCTURE'].'</a>';
 } else {
@@ -104,16 +107,16 @@ if (0 == $sql_to_display_data) {
 } else {
     // auch alle Tabellen-Namen werden lowercase -> das kann zu Problemen fuehren
     // siehe https://dev.mysql.com/doc/refman/5.7/en/identifier-case-sensitivity.html
-    $sql_temp = strtolower($sql['sql_statement']);
+    $sql_temp = strtolower((string) $sql['sql_statement']);
 
-    if ('select ' == substr($sql_temp, 0, 7)) {
-        if (false !== strpos($sql_temp, ' limit ')) {
+    if (str_starts_with($sql_temp, 'select ')) {
+        if (str_contains($sql_temp, ' limit ')) {
             // es wurde ein eigenes Limit im Query angegeben - eigene Berechnung abbrechen
             $numrowsabs = -1;
         } else {
             // anstatt sql_temp in lowerase hier das 'original' sql_statement verwenden
             $sql_temp = "SELECT count(*) as anzahl FROM (".$sql['sql_statement'].") as query;";
-            $res = @mod_query($sql_temp, false);
+            $res = mod_query($sql_temp, false);
             if ($res) {
                 if ($row = mysqli_fetch_object($res)) {
                     $numrowsabs = $row->anzahl;
@@ -128,10 +131,17 @@ if (0 == $sql_to_display_data) {
 
 $sqltmp = $sql['sql_statement'].$sql['order_statement'].(strpos(strtolower($sql['sql_statement'].$sql['order_statement']), ' limit ') ? '' : $limit);
 
+
 if (!$skip_mysql_execution) {
     $res = mod_query($sqltmp);
 }
-$numrows = mysqli_num_rows($res);
+
+if (isset($res)) {
+    $numrows = mysqli_num_rows($res);
+} else {
+    $numrows = 0;
+}
+
 
 if (-1 == $numrowsabs) {
     $numrowsabs = $numrows;
@@ -169,47 +179,53 @@ if ($numrowsabs > 0 && $Anzahl_SQLs <= 1) {
         //1.Datensatz fuer Feldinfos
         $row = mysqli_fetch_row($res);
         //Kompaktmodus-Switcher
-        $t = '<td colspan="'.(count($row) + 1).'" align="left"><a href="sql.php?db='.$db.'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;order='.urlencode($order).'&amp;orderdir='.$orderdir.'&amp;limitstart='.$limitstart.'&amp;sql_statement='.urlencode($sql['sql_statement']).'&amp;tdc='.((0 == $tdcompact) ? '1' : '0').'">'.((1 == $tdcompact) ? $lang['L_SQL_VIEW_STANDARD'] : $lang['L_SQL_VIEW_COMPACT']).'</a>';
-        $t .= '&nbsp;&nbsp;&nbsp;'.$lang['L_SQL_QUERYENTRY'].' '.count($row).' '.$lang['L_SQL_COLUMNS'];
+        $t = '<td colspan="'.(($row === null ? 0 : count($row)) + 1).'" align="left"><a href="sql.php?db='.$db.'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;order='.urlencode((string) $order).'&amp;orderdir='.$orderdir.'&amp;limitstart='.$limitstart.'&amp;sql_statement='.urlencode((string) $sql['sql_statement']).'&amp;tdc='.((0 == $tdcompact) ? '1' : '0').'">'.((1 == $tdcompact) ? $lang['L_SQL_VIEW_STANDARD'] : $lang['L_SQL_VIEW_COMPACT']).'</a>';
+        $t .= '&nbsp;&nbsp;&nbsp;'.$lang['L_SQL_QUERYENTRY'].' '.($row === null ? 0 : count($row)).' '.$lang['L_SQL_COLUMNS'];
         $t .= '</td></tr><tr class="thead">';
         $t .= '<th>&nbsp;</th><th>#</th>';
         $temp = [];
 
-        for ($x = 0; $x < count($row); ++$x) {
-            //	$temp[$x]['data'] =mysqli_fetch_field($res, $x);
-            $temp[$x]['data'] = mysqli_fetch_field($res);
-            $temp[$x]['sort'] = add_sortkey($temp[$x]['data']->name);
+        for ($x = 0; $x < ($row === null ? 0 : count($row)); ++$x) {
+            $fieldinfo = mysqli_fetch_field_direct($res, $x);
+            $fieldname = $fieldinfo->name;
+            $fieldname = ucfirst(strtolower($fieldname));
+            $sortkey = add_sortkey($fieldname);
+            if ($sortkey !== false) {
+                $temp[$x]['data'] = $fieldinfo;
+                $temp[$x]['sort'] = $sortkey;
+            }
         }
 
         if (1 == $showtables) {
             $temp = mu_sort($temp, 'sort');
         }
 
-        for ($x = 0; $x < count($temp); ++$x) {
+        for ($x = 0; $x < (is_countable($temp) ? count($temp) : 0); ++$x) {
             $str = $temp[$x]['data'];
             $t .= '<th align="left" nowrap="nowrap">';
             $pic = '';
-            $fdesc[$temp[$x]['data']->name]['name'] = isset($str->name) ? $str->name : '';
-            $fdesc[$temp[$x]['data']->name]['table'] = isset($str->table) ? $str->table : '';
-            $fdesc[$temp[$x]['data']->name]['max_length'] = isset($str->max_length) ? $str->max_length : '';
-            $fdesc[$temp[$x]['data']->name]['not_null'] = isset($str->not_null) ? $str->not_null : '';
-            $fdesc[$temp[$x]['data']->name]['primary_key'] = isset($str->primary_key) ? $str->primary_key : '';
-            $fdesc[$temp[$x]['data']->name]['unique_key'] = isset($str->unique_key) ? $str->unique_key : '';
-            $fdesc[$temp[$x]['data']->name]['multiple_key'] = isset($str->multiple_key) ? $str->multiple_key : '';
-            $fdesc[$temp[$x]['data']->name]['numeric'] = isset($str->numeric) ? $str->numeric : '';
-            $fdesc[$temp[$x]['data']->name]['blob'] = isset($str->blob) ? $str->blob : '';
-            $fdesc[$temp[$x]['data']->name]['type'] = isset($str->type) ? $str->type : '';
-            $fdesc[$temp[$x]['data']->name]['unsigned'] = isset($str->unsigned) ? $str->unsigned : '';
-            $fdesc[$temp[$x]['data']->name]['zerofill'] = isset($str->zerofill) ? $str->zerofill : '';
-            $fdesc[$temp[$x]['data']->name]['Check_time'] = isset($str->Check_time) ? $str->Check_time : '';
-            $fdesc[$temp[$x]['data']->name]['Checksum'] = isset($str->Checksum) ? $str->Checksum : '';
-            $fdesc[$temp[$x]['data']->name]['Engine'] = isset($str->Engine) ? $str->Engine : '';
-            if (isset($str->Comment) && 'VIEW' == substr($str->Comment, 0, 4)) {
+            $fdesc[$temp[$x]['data']->name]['name'] = $str->name ?? '';
+            $fdesc[$temp[$x]['data']->name]['table'] = $str->table ?? '';
+            $fdesc[$temp[$x]['data']->name]['max_length'] = $str->max_length ?? '';
+            $fdesc[$temp[$x]['data']->name]['not_null'] = $str->not_null ?? '';
+            $fdesc[$temp[$x]['data']->name]['primary_key'] = $str->primary_key ?? '';
+            $fdesc[$temp[$x]['data']->name]['unique_key'] = $str->unique_key ?? '';
+            $fdesc[$temp[$x]['data']->name]['multiple_key'] = $str->multiple_key ?? '';
+            $fdesc[$temp[$x]['data']->name]['numeric'] = $str->numeric ?? '';
+            $fdesc[$temp[$x]['data']->name]['blob'] = $str->blob ?? '';
+            $fdesc[$temp[$x]['data']->name]['type'] = $str->type ?? '';
+            $fdesc[$temp[$x]['data']->name]['unsigned'] = $str->unsigned ?? '';
+            $fdesc[$temp[$x]['data']->name]['zerofill'] = $str->zerofill ?? '';
+            $fdesc[$temp[$x]['data']->name]['Check_time'] = $str->Check_time ?? '';
+            $fdesc[$temp[$x]['data']->name]['Checksum'] = $str->Checksum ?? '';
+            $fdesc[$temp[$x]['data']->name]['Engine'] = $str->Engine ?? '';
+            if (isset($str->Comment) && str_starts_with((string) $str->Comment, 'VIEW')) {
                 $fdesc[$temp[$x]['data']->name]['Engine'] = 'View';
             }
-            $fdesc[$temp[$x]['data']->name]['Version'] = isset($str->Version) ? $str->Version : '';
+            $fdesc[$temp[$x]['data']->name]['Version'] = $str->Version ?? '';
 
             $tt = $lang['L_NAME'].': '.$fdesc[$temp[$x]['data']->name]['name'].' Type: '.$fdesc[$temp[$x]['data']->name]['type'].' Max Length: '.$fdesc[$temp[$x]['data']->name]['max_length'].' Unsigned: '.$fdesc[$temp[$x]['data']->name]['unsigned'].' zerofill: '.$fdesc[$temp[$x]['data']->name]['zerofill'];
+
 
             $pic = '<img src="'.$icon['blank'].'" alt="" width="1" height="1" border="0">';
             if ((isset($str->primary_key) && (1 == $str->primary_key)) || (isset($str->unique_key) && (1 == $str->unique_key))) {
@@ -233,17 +249,18 @@ if ($numrowsabs > 0 && $Anzahl_SQLs <= 1) {
             }
 
             if (-1 == $bb) {
-                $bb_link = ('blob' == $str->type) ? '&nbsp;&nbsp;&nbsp;<a style="font-size:10px;color:blue;" title="use BB-Code for this field" href="sql.php?db='.$db.'&amp;bb='.$x.'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;order='.$order.'&amp;orderdir='.$orderdir.'&amp;limitstart='.$limitstart.'&amp;sql_statement='.urlencode($sql['sql_statement']).'&amp;tdc='.$tdcompact.'">[BB]</a>' : '';
+                $bb_link = ('blob' == $str->type) ? '&nbsp;&nbsp;&nbsp;<a style="font-size:16px;color:blue;" title="use BB-Code for this field" href="sql.php?db='.$db.'&amp;bb='.$x.'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;order='.$order.'&amp;orderdir='.$orderdir.'&amp;limitstart='.$limitstart.'&amp;sql_statement='.urlencode((string) $sql['sql_statement']).'&amp;tdc='.$tdcompact.'">[BB]</a>' : '';
             } else {
-                $bb_link = ('blob' == $str->type) ? '&nbsp;&nbsp;&nbsp;<a title="use BB-Code for this field" href="sql.php?db='.$db.'&amp;bb=-1&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;order='.urlencode($order).'&amp;orderdir='.$orderdir.'&amp;limitstart='.$limitstart.'&amp;sql_statement='.urlencode($sql['sql_statement']).'&amp;tdc='.$tdcompact.'">[no BB]</a>' : '';
+                $bb_link = ('blob' == $str->type) ? '&nbsp;&nbsp;&nbsp;<a title="use BB-Code for this field" href="sql.php?db='.$db.'&amp;bb=-1&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;order='.urlencode((string) $order).'&amp;orderdir='.$orderdir.'&amp;limitstart='.$limitstart.'&amp;sql_statement='.urlencode((string) $sql['sql_statement']).'&amp;tdc='.$tdcompact.'">[no BB]</a>' : '';
             }
             if (false == $no_order && 0 == $showtables) {
-                $t .= $pic.'&nbsp;<a title="'.$tt.'" href="sql.php?db='.$db.'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;order='.urlencode($str->name).'&amp;orderdir='.$norder.'&amp;sql_statement='.urlencode($sql['sql_statement']).'&amp;tdc='.$tdcompact.'">'.$str->name.'</a>'.$bb_link;
+                $t .= $pic.'&nbsp;<a title="'.$tt.'" href="sql.php?db='.$db.'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;order='.urlencode((string) $str->name).'&amp;orderdir='.$norder.'&amp;sql_statement='.urlencode((string) $sql['sql_statement']).'&amp;tdc='.$tdcompact.'">'.$str->name.'</a>'.$bb_link;
             } else {
                 $t .= $pic.'&nbsp;<span title="'.$tt.'" >'.$str->name.'</span>'.$bb_link;
             }
             $t .= '</th>';
         }
+
         unset($temp);
 
         $temp = [];
@@ -260,11 +277,6 @@ if ($numrowsabs > 0 && $Anzahl_SQLs <= 1) {
                 // Spalten sortieren, wenn wir uns in einer Tabellenuebersicht befinden
                 $xx = mu_sort($data, "$s[0], $s[1], $s[2], $s[3], $s[4], $s[5], $s[6], $s[7], $s[8], $s[9], $s[10], $s[11], $s[12], $s[13], $s[14], $s[15], $s[16]");
                 $temp[$i] = $xx[0];
-
-                /***********************
-                Ergänzung www.betanet-web.ch - 30.04.2019
-                Anz. Einträge in der Tabelle wird in Ausgabe Array überschrieben, damit alle Daten exportiert werden.
-                ************************/
 
                 $tabellenname = $data[0]['Name'];
                 $numrows12 = 0;
@@ -298,13 +310,13 @@ if ($numrowsabs > 0 && $Anzahl_SQLs <= 1) {
             // get primary key link for editing
             if ($key > -1) {
                 $primary_key = '';
-                $keys = explode('|', $key);
+                $keys = explode('|', (string) $key);
                 foreach ($sortkey as $rowkey => $rowval) {
                     if (in_array($rowkey, $keys)) {
-                        if (strlen($primary_key) > 0) {
+                        if (strlen($primary_key ?? '') > 0) {
                             $primary_key .= ' AND ';
                         }
-                        $primary_key .= '`'.urlencode($rowkey).'`=\''.urlencode($rowval).'\'';
+                        $primary_key .= '`'.urlencode((string) $rowkey).'`=\''.urlencode((string) $rowval).'\'';
                     }
                 }
                 //echo "<br><br>Primaerschluessel erkannt: ".$primary_key;
@@ -318,16 +330,16 @@ if ($numrowsabs > 0 && $Anzahl_SQLs <= 1) {
                 if (1 == $erste_spalte) {
                     //edit-pics
                     $d .= $nl.'<td valign="top" nowrap="nowrap" class="small">&nbsp;'.$nl;
-                    $p = 'sql.php?sql_statement='.urlencode($sql['sql_statement']).'&amp;db='.$databases['db_actual'].'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;limitstart='.$limitstart.'&amp;order='.urlencode($order).'&amp;orderdir='.$orderdir.'&amp;tdc='.$tdcompact;
+                    $p = 'sql.php?sql_statement='.urlencode((string) $sql['sql_statement']).'&amp;db='.$databases['db_actual'].'&amp;tablename='.$tablename.'&amp;dbid='.$dbid.'&amp;limitstart='.$limitstart.'&amp;order='.urlencode((string) $order).'&amp;orderdir='.$orderdir.'&amp;tdc='.$tdcompact;
                     if (-1 == $key) {
                         $rk = build_where_from_record($temp[$i]);
-                        $p .= '&amp;recordkey='.urlencode($rk);
+                        $p .= '&amp;recordkey='.urlencode((string) $rk);
                     } else {
                         //Key vorhanden
-                        $p .= '&amp;recordkey='.urlencode($primary_key); //urlencode("`".$fdesc[$key]['name']."`='".$rowval."'");
+                        $p .= '&amp;recordkey='.urlencode((string) $primary_key); //urlencode("`".$fdesc[$key]['name']."`='".$rowval."'");
                     }
                     if (1 == $showtables) {
-                        $p .= '&amp;recordkey='.urlencode($tablename);
+                        $p .= '&amp;recordkey='.urlencode((string) $tablename);
                     }
                     if (!isset($no_edit) || !$no_edit) {
                         if (0 == $showtables) {
@@ -340,7 +352,7 @@ if ($numrowsabs > 0 && $Anzahl_SQLs <= 1) {
                     } else {
                         if (1 == $tabellenansicht && 1 == $showtables) {
                             $d .= '<a href="sql.php?db='.$db.'&amp;dbid='.$dbid.'&amp;tablename='.$tablename.'&amp;context=2">'.$icon['edit'].'</a>&nbsp;'.$nl.$nl;
-                            if (!(isset($row['Comment']) && ('VIEW' == substr(strtoupper($row['Comment']), 0, 4)))) {
+                            if (!(isset($row['Comment']) && (str_starts_with(strtoupper((string) $row['Comment']), 'VIEW')))) {
                                 $d .= '<a href="'.$p.'&amp;mode=empty" onclick="if(!confirm(\''.sprintf($lang['L_ASKTABLEEMPTY'], $tablename).'\')) return false;">'.$icon['table_truncate'].'</a>&nbsp;'.$nl.$nl;
                                 $d .= '<a href="'.$p.'&amp;mode=emptyk" onclick="if(!confirm(\''.sprintf($lang['L_ASKTABLEEMPTYKEYS'], $tablename).'\')) return false;">'.$icon['table_truncate_reset'].'</a>&nbsp;'.$nl.$nl;
                                 $d .= '<a href="'.$p.'&amp;mode=kill" onclick="if(!confirm(\''.sprintf($lang['L_ASKDELETETABLE'], $tablename).'\')) return false;">'.$icon['delete'].'</a>&nbsp;'.$nl.$nl;
@@ -379,7 +391,7 @@ if ($numrowsabs > 0 && $Anzahl_SQLs <= 1) {
                     if (is_null($rowval)) {
                         $data = '<i>NULL</i>';
                     } else {
-                        $data = htmlspecialchars($data, ENT_COMPAT, 'UTF-8');
+                        $data = htmlspecialchars((string) $data, ENT_COMPAT, 'UTF-8');
                     }
                 }
                 ++$spalte;

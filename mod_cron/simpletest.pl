@@ -17,12 +17,12 @@
 #   MyOOS [Dumper]
 #   https://www.oos-shop.de/
 #
-#   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+#   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
 #   ----------------------------------------------------------------------
 #   Based on:
 #
 #   MySqlDumper
-#   http://www.mysqldumper.de
+#   https://www.mysqldumper.de
 #
 #   Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
 #   ----------------------------------------------------------------------
@@ -39,14 +39,35 @@
 
 
 use strict;
-use CGI::Carp qw(warningsToBrowser fatalsToBrowser);  
-warningsToBrowser(1);
+use warnings;
+use threads;
 
-print "Content-type: text/html\n\n";
-print "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n";
+# Define a custom die handler
+$SIG{__DIE__} = sub {
+  my $error = shift;
+  # Print the error to STDERR
+  print STDERR "Fatal error: $error\n";
+  # Exit with non-zero status
+  exit 1;
+};
+
+$SIG{__WARN__} = sub {
+  my $warning = shift;
+  # Output the warning to STDERR
+  print STDERR "Warning: $warning\n";
+};
+
+
+print "Content-Type: text/html; charset=utf-8\n"; # Content-Type ist ein Pflicht-Header
+print "Cache-Control: no-cache, no-store, must-revalidate\n"; # Optionaler Header
+print "\n"; # Leerzeile, um die Header vom Inhalt zu trennen
+
+print "<!DOCTYPE HTML>\n";
 print "<html><head><title>MyOOS [Dumper] - simple Perl test</title>\n";
 print '<style type="text/css">body { padding-left:18px; font-family:Verdana,Helvetica,Sans-Serif;}</style>';
 print "\n</head><body>\n";
 print "<p>If you see this perl works fine on your system !<br><br>";
 print "Wenn Du das siehst, funktioniert Perl auf Deinem System !</p>";
 print "</body></html>\n";
+
+close STDOUT;

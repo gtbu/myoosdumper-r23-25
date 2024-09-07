@@ -1,20 +1,22 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 define('DEBUG', 0);
 if (!defined('MOD_VERSION')) {
@@ -40,11 +42,14 @@ function get_sqlbefehl()
         if (DEBUG) {
             echo '<br><br>Zeile: '.htmlspecialchars($zeile);
         }
-        /******************* Setzen des Parserstatus *******************/
+        /*******************
+        *
+        * Setzen des Parserstatus
+        *******************/
         // herausfinden um was für einen Befehl es sich handelt
         if (0 == $sqlparser_status) {
             //Vergleichszeile, um nicht bei jedem Vergleich strtoupper ausführen zu müssen
-            $zeile2 = strtoupper(trim($zeile));
+            $zeile2 = strtoupper(trim((string) $zeile));
             // pre-built compare strings - so we need the CPU power only once :)
             $sub9 = substr($zeile2, 0, 9);
             $sub7 = substr($sub9, 0, 7);
@@ -64,7 +69,7 @@ function get_sqlbefehl()
                 $sqlparser_status = 4;
             } elseif ('COMMIT' == $sub6) {
                 $sqlparser_status = 7;
-            } elseif ('BEGIN' == substr($sub6, 0, 5)) {
+            } elseif (str_starts_with($sub6, 'BEGIN')) {
                 $sqlparser_status = 7;
             } elseif ('UNLOCK TA' == $sub9) {
                 $sqlparser_status = 4;
@@ -89,7 +94,7 @@ function get_sqlbefehl()
             } //Indexaktion
 
             //Condition?
-            elseif ((5 != $sqlparser_status) && ('/*' == substr($zeile2, 0, 2))) {
+            elseif ((5 != $sqlparser_status) && (str_starts_with($zeile2, '/*'))) {
                 $sqlparser_status = 6;
             }
 
@@ -130,14 +135,17 @@ function get_sqlbefehl()
                 $sqlparser_status = 3;
             }
 
-            if ((0 == $sqlparser_status) && (trim($complete_sql) > '') && (-1 == $restore['flag'])) {
+            if ((0 == $sqlparser_status) && (trim((string) $complete_sql) > '') && (-1 == $restore['flag'])) {
                 // Unbekannten Befehl entdeckt
                 v($restore);
-                echo '<br>Sql: '.htmlspecialchars($complete_sql);
+                echo '<br>Sql: '.htmlspecialchars((string) $complete_sql);
                 echo '<br>Erweiterte Inserts: '.$restore['erweiterte_inserts'];
                 exit('<br>'.$lang['L_UNKNOWN_SQLCOMMAND'].': '.$zeile.'<br><br>'.$complete_sql);
             }
-            /******************* Ende von Setzen des Parserstatus *******************/
+            /*******************
+            *
+            * Ende von Setzen des Parserstatus
+            *******************/
         }
 
         $last_char = substr(rtrim($zeile), -1);
@@ -149,25 +157,25 @@ function get_sqlbefehl()
             //INSERT
             if (SQL_Is_Complete($complete_sql)) {
                 $sqlparser_status = 100;
-                $complete_sql = trim($complete_sql);
-                if ('*/' == substr($complete_sql, -2)) {
+                $complete_sql = trim((string) $complete_sql);
+                if (str_ends_with($complete_sql, '*/')) {
                     $complete_sql = remove_comment_at_eol($complete_sql);
                 }
 
                 // letzter Ausdruck des erweiterten Inserts erreicht?
-                if (');' == substr($complete_sql, -2)) {
+                if (str_ends_with((string) $complete_sql, ');')) {
                     $restore['flag'] = -1;
                 }
 
                 // Wenn am Ende der Zeile ein Klammer Komma -> erweiterter Insert-Modus -> Steuerflag setzen
-                elseif ('),' == substr($complete_sql, -2)) {
+                elseif (str_ends_with((string) $complete_sql, '),')) {
                     // letztes Komme gegen Semikolon tauschen
-                    $complete_sql = substr($complete_sql, 0, -1).';';
+                    $complete_sql = substr((string) $complete_sql, 0, -1).';';
                     $restore['erweiterte_inserts'] = 1;
                     $restore['flag'] = 1;
                 }
 
-                if ('INSERT ' != substr(strtoupper($complete_sql), 0, 7)) {
+                if (!str_starts_with(strtoupper((string) $complete_sql), 'INSERT ')) {
                     // wenn der Syntax aufgrund eines Reloads verloren ging - neu ermitteln
                     if (!isset($restore['insert_syntax'])) {
                         $restore['insert_syntax'] = get_insert_syntax($restore['actual_table']);
@@ -175,9 +183,9 @@ function get_sqlbefehl()
                     $complete_sql = $restore['insert_syntax'].' VALUES '.$complete_sql.';';
                 } else {
                     // INSERT Syntax ermitteln und merken
-                    $ipos = strpos(strtoupper($complete_sql), ' VALUES');
+                    $ipos = strpos(strtoupper((string) $complete_sql), ' VALUES');
                     if (false === !$ipos) {
-                        $restore['insert_syntax'] = substr($complete_sql, 0, $ipos);
+                        $restore['insert_syntax'] = substr((string) $complete_sql, 0, $ipos);
                     } else {
                         $restore['insert_syntax'] = 'INSERT INTO `'.$restore['actual_table'].'`';
                     }
@@ -215,29 +223,30 @@ function get_sqlbefehl()
         }
 
         // Index
-                elseif (4 == $sqlparser_status) { //Createindex
-                        if (';' == $last_char) {
-                            if ($config['minspeed'] > 0) {
-                                $restore['anzahl_zeilen'] = $config['minspeed'];
-                            }
-                            $complete_sql = del_inline_comments($complete_sql);
-                            $sqlparser_status = 100;
-                        }
+        elseif (4 == $sqlparser_status) { //Createindex
+            if (';' == $last_char) {
+                if ($config['minspeed'] > 0) {
+                    $restore['anzahl_zeilen'] = $config['minspeed'];
                 }
+                $complete_sql = del_inline_comments($complete_sql);
+                $sqlparser_status = 100;
+            }
+        }
 
         // Kommentar oder Condition
-                    elseif (5 == $sqlparser_status) { //Anweisung
-                            $t = strrpos($zeile, '*/;');
-                        if (false === !$t) {
-                            $restore['anzahl_zeilen'] = $config['minspeed'];
-                            $sqlparser_status = 100;
-                            if ($config['ignore_enable_keys'] &&
-                                    false !== strrpos($zeile, 'ENABLE KEYS ')) {
-                                $sqlparser_status = 100;
-                                $complete_sql = '';
-                            }
-                        }
-                    }
+        elseif (5 == $sqlparser_status) { //Anweisung
+            $t = strrpos($zeile, '*/;');
+            if (false === !$t) {
+                $restore['anzahl_zeilen'] = $config['minspeed'];
+                $sqlparser_status = 100;
+                if ($config['ignore_enable_keys']
+                    && false !== strrpos($zeile, 'ENABLE KEYS ')
+                ) {
+                    $sqlparser_status = 100;
+                    $complete_sql = '';
+                }
+            }
+        }
 
         // Mehrzeiliger oder Inline-Kommentar
         elseif (6 == $sqlparser_status) {
@@ -249,15 +258,15 @@ function get_sqlbefehl()
         }
 
         // Befehle, die verworfen werden sollen
-                            elseif (7 == $sqlparser_status) { //Anweisung
-                                    if (';' == $last_char) {
-                                        if ($config['minspeed'] > 0) {
-                                            $restore['anzahl_zeilen'] = $config['minspeed'];
-                                        }
-                                        $complete_sql = '';
-                                        $sqlparser_status = 0;
-                                    }
-                            }
+        elseif (7 == $sqlparser_status) { //Anweisung
+            if (';' == $last_char) {
+                if ($config['minspeed'] > 0) {
+                    $restore['anzahl_zeilen'] = $config['minspeed'];
+                }
+                $complete_sql = '';
+                $sqlparser_status = 0;
+            }
+        }
 
         if (($restore['compressed']) && (gzeof($restore['filehandle']))) {
             $restore['fileEOF'] = true;
@@ -270,7 +279,7 @@ function get_sqlbefehl()
     if (is_array($restore['tables_to_restore']) && !(in_array($restore['actual_table'], $restore['tables_to_restore']))) {
         $complete_sql = '';
     }
-    return trim($complete_sql);
+    return trim((string) $complete_sql);
 }
 
 function submit_create_action($sql)
@@ -279,9 +288,9 @@ function submit_create_action($sql)
 
     //executes a create command
     $tablename = get_tablename($sql);
-    if ('CREATE ALGORITHM' == strtoupper(substr($sql, 0, 16))) {
+    if ('CREATE ALGORITHM' == strtoupper(substr((string) $sql, 0, 16))) {
         // It`s a VIEW. We need to substitute the original DEFINER with the actual MySQL-User
-        $parts = explode(' ', $sql);
+        $parts = explode(' ', (string) $sql);
         for ($i = 0, $count = sizeof($parts); $i < $count; ++$i) {
             if ('DEFINER=' == strtoupper(substr($parts[$i], 0, 8))) {
                 $parts[$i] = 'DEFINER=`'.$config['dbuser'].'`@`'.$config['dbhost'].'`';
@@ -330,9 +339,9 @@ function del_inline_comments($sql)
 {
     //$sql=str_replace("\n",'<br>', $sql);
     $array = [];
-    preg_match_all("/(\/\*(.+)\*\/)/U", $sql, $array);
+    preg_match_all("/(\/\*(.+)\*\/)/U", (string) $sql, $array);
     if (is_array($array[0])) {
-        $sql = str_replace($array[0], '', $sql);
+        $sql = str_replace($array[0], '', (string) $sql);
         if (DEBUG) {
             echo 'Nachher: :<br>'.$sql.'<br><hr>';
         }
@@ -349,7 +358,7 @@ function del_inline_comments($sql)
 function get_tablename($t)
 {
     // alle Schluesselbegriffe entfernen, bis der Tabellenname am Anfang steht
-    $t = substr($t, 0, 150); // verkuerzen, um Speicher zu sparen - wir brauchenhier nur den Tabellennamen
+    $t = substr((string) $t, 0, 150); // verkuerzen, um Speicher zu sparen - wir brauchenhier nur den Tabellennamen
     $t = str_ireplace('DROP TABLE', '', $t);
     $t = str_ireplace('DROP VIEW', '', $t);
     $t = str_ireplace('CREATE TABLE', '', $t);
@@ -357,12 +366,12 @@ function get_tablename($t)
     $t = str_ireplace('REPLACE INTO', '', $t);
     $t = str_ireplace('IF NOT EXISTS', '', $t);
     $t = str_ireplace('IF EXISTS', '', $t);
-    if ('CREATE ALGORITHM' == substr(strtoupper($t), 0, 16)) {
+    if (str_starts_with(strtoupper($t), 'CREATE ALGORITHM')) {
         $pos = strpos($t, 'DEFINER VIEW ');
         $t = substr($t, $pos, strlen($t) - $pos);
     }
     $t = str_ireplace(';', ' ;', $t); // tricky -> insert space as delimiter
-    $t = trim($t);
+    $t = trim((string) $t);
 
     // jetzt einfach nach dem ersten Leerzeichen suchen
     $delimiter = substr($t, 0, 1);
@@ -381,21 +390,21 @@ function get_tablename($t)
         ++$position;
     }
     $t = substr($t, 0, $position);
-    $t = trim(str_replace('`', '', $t));
+    $t = trim((string) str_replace('`', '', $t));
     return $t;
 }
 
 // decide if an INSERT-Command is complete - simply count quotes and look for ); at the end of line
 function SQL_Is_Complete($string)
 {
-    $string = str_replace('\\\\', '', trim($string)); // trim and remove escaped backslashes
+    $string = str_replace('\\\\', '', trim((string) $string)); // trim and remove escaped backslashes
     $string = trim($string);
     $quotes = substr_count($string, '\'');
     $escaped_quotes = substr_count($string, '\\\'');
     if (($quotes - $escaped_quotes) % 2 == 0) {
         $compare = substr($string, -2);
         if ('*/' == $compare) {
-            $compare = substr(trim(remove_comment_at_eol($string)), -2);
+            $compare = substr(trim((string) remove_comment_at_eol($string)), -2);
         }
         if (');' == $compare) {
             return true;
@@ -410,10 +419,10 @@ function SQL_Is_Complete($string)
 function remove_comment_at_eol($string)
 {
     // check for Inline-Comments at the end of the line
-    if ('*/' == substr(trim($string), -2)) {
-        $pos = strrpos($string, '/*');
+    if (str_ends_with(trim((string) $string), '*/')) {
+        $pos = strrpos((string) $string, '/*');
         if ($pos > 0) {
-            $string = trim(substr($string, 0, $pos));
+            $string = trim(substr((string) $string, 0, $pos));
         }
     }
     return $string;

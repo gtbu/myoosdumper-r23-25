@@ -1,20 +1,22 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 define('OOS_VALID_MOD', true);
 
@@ -22,22 +24,28 @@ if (!@ob_start('ob_gzhandler')) {
     @ob_start();
 }
 
-include_once './inc/header.php';
-include './inc/template.php';
+global $config, $databases;
+
+require_once './inc/header.php';
+require './inc/template.php';
 $lang_old = $config['language'];
 $config_refresh = '';
 
 // define template
 $tpl = new MODTemplate();
-$tpl->set_filenames([
+$tpl->set_filenames(
+    [
     'header' => 'tpl/menu/header.tpl',
     'footer' => 'tpl/menu/footer.tpl',
-    'content' => 'tpl/menu/content.tpl', ]);
+    'content' => 'tpl/menu/content.tpl', ]
+);
 
-$tpl->assign_vars([
+$tpl->assign_vars(
+    [
     'MOD_VERSION' => MOD_VERSION,
     'CONFIG_HOMEPAGE' => $config['homepage'],
-    'CONFIG_THEME' => $config['theme'], ]);
+    'CONFIG_THEME' => $config['theme'], ]
+);
 
 if (isset($_POST['selected_config']) || isset($_GET['config'])) {
     if (isset($_POST['selected_config'])) {
@@ -62,7 +70,7 @@ if (isset($_POST['selected_config']) || isset($_GET['config'])) {
 				var selected_div=parent.MyOOS_Dumper_content.document.getElementById("sel").value;
 			}
 			else selected_div=\'\';
-			parent.MyOOS_Dumper_content.location.href=\'config_overview.php?config='.urlencode($new_config).'&sel=\'+selected_div</script>';
+			parent.MyOOS_Dumper_content.location.href=\'config_overview.php?config='.urlencode((string) $new_config).'&sel=\'+selected_div</script>';
         }
         if (isset($_GET['config'])) {
             $config_refresh = '';
@@ -86,7 +94,7 @@ if ($config['language'] != $lang_old) {
 if (isset($_GET['action'])) {
     if ('dbrefresh' == $_GET['action']) {
         // remember the name of the selected database
-        $old_dbname = isset($databases['Name'][$databases['db_selected_index']]) ? $databases['Name'][$databases['db_selected_index']] : '';
+        $old_dbname = $databases['Name'][$databases['db_selected_index']] ?? '';
         SetDefault();
         // select old database if it still is there
         SelectDB($old_dbname);
@@ -114,23 +122,28 @@ if (isset($_GET['dbindex'])) {
     WriteParams(0);
 }
 
-if (isset($databases['Name']) && count($databases['Name']) > 0) {
+if (isset($databases['Name']) && (is_countable($databases['Name']) ? count($databases['Name']) : 0) > 0) {
     $tpl->assign_block_vars('MAINTENANCE', []);
-    $tpl->assign_vars([
+    $tpl->assign_vars(
+        [
         'DB_ACTUAL' => $databases['db_actual'],
-        'DB_SELECTED_INDEX' => $databases['db_selected_index'], ]);
+        'DB_SELECTED_INDEX' => $databases['db_selected_index'], ]
+    );
 }
 $tpl->assign_var('GET_FILELIST', get_config_filelist());
 
-if (isset($databases['Name']) && count($databases['Name']) > 0) {
+if (isset($databases['Name']) && (is_countable($databases['Name']) ? count($databases['Name']) : 0) > 0) {
     $tpl->assign_block_vars('DB_LIST', []);
-    $datenbanken = count($databases['Name']);
+    $datenbanken = is_countable($databases['Name']) ? count($databases['Name']) : 0;
     for ($i = 0; $i < $datenbanken; ++$i) {
         $selected = ($i == $databases['db_selected_index']) ? ' selected' : '';
-        $tpl->assign_block_vars('DB_LIST.DB_ROW', [
+        $tpl->assign_block_vars(
+            'DB_LIST.DB_ROW',
+            [
             'ID' => $i,
             'NAME' => $databases['Name'][$i],
-            'SELECTED' => $selected, ]);
+            'SELECTED' => $selected, ]
+        );
     }
 } else {
     $tpl->assign_block_vars('NO_DB_FOUND', []);
@@ -138,7 +151,7 @@ if (isset($databases['Name']) && count($databases['Name']) > 0) {
 
 $tpl->assign_var('PIC_CACHE', PicCache());
 
-if (!isset($databases['Name']) || count($databases['Name']) < 1) {
+if (!isset($databases['Name']) || (is_countable($databases['Name']) ? count($databases['Name']) : 0) < 1) {
     $tpl->assign_block_vars('DB_NAME_TRUE', []);
 } else {
     $tpl->assign_block_vars('DB_NAME_FALSE', []);

@@ -1,25 +1,28 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
 }
-include './language/'.$config['language'].'/lang_sql.php';
+global $config;
+require './language/'.$config['language'].'/lang_sql.php';
 echo MODHeader();
 echo headline($lang['L_HTACC_EDIT']);
 
@@ -32,7 +35,7 @@ if (isset($_POST['hta_dir']) && isset($_POST['hta_file']) && is_dir($_POST['hta_
     $hta_dir = $config['paths']['root'];
     $hta_file = '.htaccess';
 }
-if ('' != $hta_dir & '/' != substr($hta_dir, -1)) {
+if ('' != $hta_dir & !str_ends_with((string) $hta_dir, '/')) {
     $hta_dir .= '/';
 }
 $hta_complete = $hta_dir.$hta_file;
@@ -45,7 +48,7 @@ if ((isset($_GET['create']) && 1 == $_GET['create']) || (isset($_POST['create'])
 
 if (isset($_POST['submit']) && isset($_POST['thta'])) {
     $fp = fopen($hta_complete, 'w');
-    fwrite($fp, $_POST['thta']);
+    fwrite($fp, (string) $_POST['thta']);
     fclose($fp);
 }
 if (file_exists($hta_complete)) {
@@ -77,7 +80,7 @@ if (1 != $htaccessdontexist) {
 		<a href="javascript:insertHTA(107,document.ehta.thta)">'.$lang['L_HTACCESS26'].'</a><br>
 		<a href="javascript:insertHTA(108,document.ehta.thta)">'.$lang['L_HTACCESS27'].'</a><br>
 		<a href="javascript:insertHTA(109,document.ehta.thta)">'.$lang['L_HTACCESS28'].'</a><br>
-		<br><a href="http://httpd.apache.org/docs/2.0/mod/directives.html" target="_blank">'.$lang['L_HTACCESS29'].'</a>';
+		<br><a href="http://httpd.apache.org/docs/2.0/mod/directives.html" target="_blank" rel="noopener">'.$lang['L_HTACCESS29'].'</a>';
     echo '</td></tr>';
     echo '<tr><td colspan="2">';
     echo '<input type="submit" name="submit" value=" '.$lang['L_SAVE'].' " class="Formbutton">&nbsp;&nbsp;&nbsp;';

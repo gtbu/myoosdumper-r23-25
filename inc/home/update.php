@@ -1,24 +1,30 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
+
+use VisualAppeal\AutoUpdate;
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
 }
+
+global $config;
 
 if ($update->newVersionAvailable() && $check_update === true) {
     // Install new update
@@ -71,7 +77,7 @@ if ($update->newVersionAvailable() && $check_update === true) {
     } else {
         echo $lang['L_UPDATE_FAILED'] . ': ' . $result . '!<br>';
 
-        if ($result = AutoUpdate::ERROR_SIMULATE) {
+        if ($result == AutoUpdate::ERROR_SIMULATE) {
             echo '<pre>';
             var_dump($update->getSimulationResults());
             echo '</pre>';

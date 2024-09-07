@@ -1,27 +1,30 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
 }
-include './language/'.$config['language'].'/lang_sql.php';
+global $config;
+require './language/'.$config['language'].'/lang_sql.php';
 
-include './inc/home/apr1_md5/apr1_md5.php';
+require './inc/home/apr1_md5/apr1_md5.php';
 use WhiteHat101\Crypt\APR1_MD5;
 
 $dba = $hta_dir = $Overwrite = $msg = '';
@@ -40,20 +43,24 @@ if ('WIN' == strtoupper(substr(MOD_OS, 0, 3))) {
 if (isset($_POST['type'])) {
     $type = intval($_POST['type']);
 }
-$username = (isset($_POST['username'])) ? $_POST['username'] : '';
-$userpass1 = (isset($_POST['userpass1'])) ? $_POST['userpass1'] : '';
-$userpass2 = (isset($_POST['userpass2'])) ? $_POST['userpass2'] : '';
+$username = $_POST['username'] ?? '';
+$userpass1 = $_POST['userpass1'] ?? '';
+$userpass2 = $_POST['userpass2'] ?? '';
 
 header('Pragma: no-cache');
 header('Cache-Control: no-cache, must-revalidate');
 header('Expires: -1');
 header('Content-Type: text/html; charset=UTF-8');
 $tpl = new MODTemplate();
-$tpl->set_filenames([
-    'show' => './tpl/home/protection_create.tpl', ]);
-$tpl->assign_vars([
+$tpl->set_filenames(
+    [
+    'show' => './tpl/home/protection_create.tpl', ]
+);
+$tpl->assign_vars(
+    [
     'THEME' => $config['theme'],
-    'HEADLINE' => headline($lang['L_HTACC_CREATE']), ]);
+    'HEADLINE' => headline($lang['L_HTACC_CREATE']), ]
+);
 
 if (isset($_POST['username'])) {
     // Form submitted
@@ -73,27 +80,27 @@ if (isset($_POST['username'])) {
             'AuthName "'.$realm."\"\n".
             "AuthType Basic\n".
             'AuthUserFile "'.$config['paths']['root'].".htpasswd\"\n".
-            'Require valid-user';
+            "Require valid-user\n";
         switch ($type) {
             // CRYPT
             case 0:
-                $userpass = crypt($userpass1, 'rl');
+                $userpass = crypt((string) $userpass1, 'rl');
                 break;
-            // MD5(APR)
+                // MD5(APR)
             case 1:
                 $userpass = APR1_MD5::hash($userpass1);
                 break;
-            // PLAIN TEXT
+                // PLAIN TEXT
             case 2:
                 $userpass = $userpass1;
                 break;
-            // SHA1
+                // SHA1
             case 3:
-                $userpass = '{SHA}'.base64_encode(sha1($userpass1, true));
+                $userpass = '{SHA}'.base64_encode(sha1((string) $userpass1, true));
                 break;
-            // BCRYPT
+                // BCRYPT
             case 4:
-                $userpass = password_hash($userpass1, PASSWORD_BCRYPT);
+                $userpass = password_hash((string) $userpass1, PASSWORD_BCRYPT);
                 break;
         }
         $htpasswd = $username.':'.$userpass;
@@ -120,44 +127,58 @@ if (isset($_POST['username'])) {
 
         if (false !== $saved) {
             $msg = '<span class="success">'.$lang['L_HTACC_CREATED'].'</span>';
-            $tpl->assign_block_vars('CREATE_SUCCESS', [
+            $tpl->assign_block_vars(
+                'CREATE_SUCCESS',
+                [
                 'HTACCESS' => htmlspecialchars($htaccess),
                 'HTPASSWD' => htmlspecialchars($htpasswd),
-            ]);
+                ]
+            );
             @chmod($config['paths']['root'], 0755);
         } else {
-            $tpl->assign_block_vars('CREATE_ERROR', [
+            $tpl->assign_block_vars(
+                'CREATE_ERROR',
+                [
                 'HTACCESS' => htmlspecialchars($htaccess),
                 'HTPASSWD' => htmlspecialchars($htpasswd),
-            ]);
+                ]
+            );
         }
     }
 }
 
 if (sizeof($error) > 0 || !isset($_POST['username'])) {
-    $tpl->assign_vars([
+    $tpl->assign_vars(
+        [
         'PASSWORDS_UNEQUAL' => my_addslashes($lang['L_PASSWORDS_UNEQUAL']),
         'HTACC_CONFIRM_CREATE' => my_addslashes($lang['L_HTACC_CONFIRM_CREATE']),
-    ]);
+        ]
+    );
 
-    $tpl->assign_block_vars('INPUT', [
-        'USERNAME' => htmlspecialchars($username),
-        'USERPASS1' => htmlspecialchars($userpass1),
-        'USERPASS2' => htmlspecialchars($userpass2),
+    $tpl->assign_block_vars(
+        'INPUT',
+        [
+        'USERNAME' => htmlspecialchars((string) $username),
+        'USERPASS1' => htmlspecialchars((string) $userpass1),
+        'USERPASS2' => htmlspecialchars((string) $userpass2),
         'TYPE0_CHECKED' => 0 == $type ? ' checked="checked"' : '',
         'TYPE1_CHECKED' => 1 == $type ? ' checked="checked"' : '',
         'TYPE2_CHECKED' => 2 == $type ? ' checked="checked"' : '',
         'TYPE3_CHECKED' => 3 == $type ? ' checked="checked"' : '',
         'TYPE4_CHECKED' => 4 == $type ? ' checked="checked"' : '',
-    ]);
+        ]
+    );
 }
 
 if (sizeof($error) > 0) {
     $msg = '<span class="error">'.implode('<br>', $error).'</span>';
 }
 if ($msg > '') {
-    $tpl->assign_block_vars('MSG', [
-    'TEXT' => $msg, ]);
+    $tpl->assign_block_vars(
+        'MSG',
+        [
+        'TEXT' => $msg, ]
+    );
 }
 
 $tpl->pparse('show');

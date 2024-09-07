@@ -3,12 +3,12 @@
 #   MyOOS [Dumper]
 #   https://www.oos-shop.de/
 #
-#   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+#   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
 #   ----------------------------------------------------------------------
 #   Based on:
 #
 #   MySqlDumper
-#   http://www.mysqldumper.de
+#   https://www.mysqldumper.de
 #
 #   Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
 #   ----------------------------------------------------------------------
@@ -23,11 +23,11 @@
 
 
 use strict;
+use warnings;
+use threads;
+use utf8;
 use Socket;
 use Config;
-use CGI::Carp qw(warningsToBrowser fatalsToBrowser);  
-use CGI;
-warningsToBrowser(1); # dies ist ganz wichtig!
 
 my $eval_in_died;
 my $mod_dbi=0;
@@ -35,6 +35,7 @@ my $mod_ff=0;
 my $mod_fb=0;
 my $mod_gz=0;
 my $mod_ftp=0;
+my $mod_sftp_foreign=0;
 my $mod_mime=0;
 my $mod_ftpssl=0;
 my $dbi_driver;
@@ -44,14 +45,32 @@ my $ok='<font color="green">';
 my $err='<font color="red">';
 my $zlib_version='unknown';
 
-my $cgi = CGI->new();
-print $cgi->header(-type => 'text/html; charset=utf-8', -cache_control => 'no-cache, no-store, must-revalidate');
-print "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n";
+# Define a custom die handler
+$SIG{__DIE__} = sub {
+  my $error = shift;
+  # Print the error to STDERR
+  print STDERR "Fatal error: $error\n";
+  # Exit with non-zero status
+  exit 1;
+};
+
+$SIG{__WARN__} = sub {
+  my $warning = shift;
+  # Output the warning to STDERR
+  print STDERR "Warning: $warning\n";
+};
+
+print "Content-Type: text/html; charset=utf-8\n"; # Content-Type ist ein Pflicht-Header
+print "Cache-Control: no-cache, no-store, must-revalidate\n"; # Optionaler Header
+print "\n"; # Leerzeile, um die Header vom Inhalt zu trennen
+
+print "<!DOCTYPE HTML>\n";
 print "<html><head><title>MyOOS [Dumper] Perl modul test</title>\n";
 print '<style type="text/css">body { padding-left:18px; font-family:Verdana,Helvetica,Sans-Serif;}</style></head>';
 print "<body><h2>Testing needed Perl-Moduls in order to run the Perl script crondump.pl</h2>\n";
 print "<h4 style=\"background-color:#ccffcc;\">Necessary Modules for crondump.pl</h4>";
 print "<strong>testing DBI ...</strong>\n";
+
 eval { $eval_in_died = 1; require DBI; };
        if(!$@){
             $mod_dbi = 1;
@@ -134,6 +153,20 @@ if($mod_ftp!=1){
     print $ok."Found modul Net::FTP. OK - crondump.pl can send backups via FTP.</font><br>\n";
 }
 
+
+print "<br><strong>testing Net::SFTP::Foreign (needed if you want to transfer backups to another server)...</strong><br>\n";
+eval { $eval_in_died = 1; require Net::SFTP::Foreign; };
+       if(!$@){
+            $mod_sftp_foreign = 1;
+            import Net::SFTP;
+            }
+if($mod_sftp_foreign!=1){
+    print $err."Error: modul Net::SFTP::Foreign not found! crondump.pl can't transfer data via sFTP.</font><br>\n";
+} else {
+    print $ok."Found modul Net::SFTP::Foreign. OK - crondump.pl can send backups via FTP.</font><br>\n";
+}
+
+
 print "<br><strong>testing Net::FTPSSL (needed if you want to transfer backups to another server with ssl encryption)...</strong><br>\n";
 eval { $eval_in_died = 1; require Net::FTPSSL; };
        if(!$@){
@@ -160,3 +193,5 @@ if($mod_mime!=1){
 }
 
 print "<br><br><br><br></body></html>\n";
+
+close STDOUT;

@@ -32,9 +32,9 @@
 			<label for="t{ROW.ID}">{ROW.TABLENAME}</label>
 		</td>
 		<td class="sm" align="left">
-			<input type="checkbox" class="checkbox" name="chk_tbl" id="t{ROW.ID}" value="{ROW.TABLENAME}">
+			<input type="checkbox" class="checkbox-style" name="chk_tbl" id="t{ROW.ID}" value="{ROW.TABLENAME}">
 			<!-- 
-			<input type="checkbox" class="checkbox" name="chk_tbl_data" id="t_data{ROW.ID}" value="{ROW.TABLENAME}">
+			<input type="checkbox" class="checkbox-style" name="chk_tbl_data" id="t_data{ROW.ID}" value="{ROW.TABLENAME}">
 			 -->
 		</td>
 		<td style="text-align:right">

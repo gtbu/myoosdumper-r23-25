@@ -1,30 +1,35 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 error_reporting(E_ALL);
+
+// Set the error handling function
+set_error_handler("myErrorHandler");
 
 if (function_exists('date_default_timezone_set')) {
     date_default_timezone_set(@date_default_timezone_get());
 }
+global $config, $databases;
 //Konstanten
-if (!defined('MOD_VERSION')) {
-    define('MOD_VERSION', '5.0.20');
-}
+define('MOD_VERSION', '5.0.25 -dev');
+
 if (!defined('MOD_OS')) {
     define('MOD_OS', PHP_OS);
 }
@@ -75,12 +80,12 @@ if ($config['max_execution_time'] > 30) {
 $config['upload_max_filesize'] = get_cfg_var('upload_max_filesize');
 $config['disabled'] = get_cfg_var('disable_functions');
 $config['phpextensions'] = implode(', ', get_loaded_extensions());
-$m = trim(str_replace('M', '', ini_get('memory_limit')));
+$m = trim((string) str_replace('M', '', ini_get('memory_limit')));
 // fallback if ini_get doesn't work
 if (0 == intval($m)) {
-    $m = trim(str_replace('M', '', get_cfg_var('memory_limit')));
+    $m = trim((string) str_replace('M', '', get_cfg_var('memory_limit')));
 }
-$config['php_ram'] = $m;
+$config['php_ram'] = floatval($m);
 
 //Ist zlib moeglich?
 $p1 = explode(', ', $config['phpextensions']);
@@ -132,6 +137,7 @@ $dontBackupDatabases = ['mysql', 'information_schema'];
 $_POST = trim_deep($_POST);
 $_GET = trim_deep($_GET);
 
+
 function v($t)
 {
     echo '<br>';
@@ -144,7 +150,44 @@ function v($t)
     }
 }
 
+
+// Define the error handling function
+function myErrorHandler($errno, $errstr, $errfile, $errline)
+{
+    global $config;
+
+    // Open the error_log.txt file for writing
+    $file = fopen($config['paths']['log'].'error_log.txt', 'a');
+
+    // Check if fopen was successful
+    if ($file) {
+        // Write the error in the file
+        fwrite($file, "Error $errno: $errstr in $errfile on line $errline\n");
+        // Close the file
+        fclose($file);
+    } else {
+        // Handle the error
+        echo "Could not open file for writing\n";
+        echo $file . "\n";
+        echo "Error $errno: $errstr in $errfile on line $errline\n";
+    }
+    // Return true to avoid the standard error handling
+    return true;
+}
+
+
+
 function getServerProtocol()
 {
-    return (isset($_SERVER['HTTPS']) && 'on' == strtolower($_SERVER['HTTPS'])) ? 'https://' : 'http://';
+
+    if (isset($_SERVER['HTTPS']) && (strtolower((string) $_SERVER['HTTPS']) == 'on' || $_SERVER['HTTPS'] == 1)) {
+        $scheme = 'https://';
+    } elseif (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) {
+        $scheme = 'https://';
+    } else {
+        $scheme = 'http://';
+    }
+
+
+    return $scheme;
 }

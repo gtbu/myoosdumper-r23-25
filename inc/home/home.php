@@ -1,24 +1,29 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
 }
+
+global $config, $databases;
+
 $Sum_Files = $Sum_Size = 0;
 $Last_BU = [];
 $is_htaccess = (file_exists('./.htaccess'));
@@ -30,13 +35,13 @@ $available = [];
 if ('' == $databases['multisetting']) {
     $available[0] = $databases['db_actual'];
 } else {
-    $available = explode(';', $databases['multisetting']);
+    $available = explode(';', (string) $databases['multisetting']);
 }
 $dh = opendir($config['paths']['backup']);
 while (false !== ($filename = readdir($dh))) {
     if ('.' != $filename && '..' != $filename && !is_dir($config['paths']['backup'].$filename)) {
         foreach ($available as $item) {
-            $pos = strpos($filename, $item);
+            $pos = strpos($filename, (string) $item);
             if ($pos === false) {
                 // Der Datenbankname wurde nicht in der Konfiguration gefunden;
             } else {
@@ -68,9 +73,12 @@ if ($is_new_version_available) {
 }
 
 $tpl = new MODTemplate();
-$tpl->set_filenames([
-    'show' => 'tpl/home/home.tpl', ]);
-$tpl->assign_vars([
+$tpl->set_filenames(
+    [
+    'show' => 'tpl/home/home.tpl', ]
+);
+$tpl->assign_vars(
+    [
     'THEME' => $config['theme'],
     'MOD_VERSION' => MOD_VERSION,
     'OS' => MOD_OS,
@@ -86,7 +94,8 @@ $tpl->assign_vars([
     'NR_OF_BACKUP_FILES' => $Sum_Files,
     'SIZE_BACKUPS' => byte_output($Sum_Size),
     'FREE_DISKSPACE' => MD_FreeDiskSpace(),
-]);
+    ]
+);
 
 
 
@@ -94,20 +103,29 @@ if ($is_new_version_available) {
     $tpl->assign_block_vars('NEW_VERSION_EXISTS', []);
 }
 
-if ($update_info > '') {
-    $tpl->assign_block_vars('UPDATE_INFO', [
-    'MSG' => $update_info, ]);
+if (isset($update_info)) {
+    $tpl->assign_block_vars(
+        'UPDATE_INFO',
+        [
+        'MSG' => $update_info, ]
+    );
 }
 
 
 if ($directory_warnings > '') {
-    $tpl->assign_block_vars('DIRECTORY_WARNINGS', [
-    'MSG' => $directory_warnings, ]);
+    $tpl->assign_block_vars(
+        'DIRECTORY_WARNINGS',
+        [
+        'MSG' => $directory_warnings, ]
+    );
 }
 
 if ($config['disabled'] > '') {
-    $tpl->assign_block_vars('DISABLED_FUNCTIONS', [
-    'PHP_DISABLED_FUNCTIONS' => str_replace(',', ', ', $config['disabled']), ]);
+    $tpl->assign_block_vars(
+        'DISABLED_FUNCTIONS',
+        [
+        'PHP_DISABLED_FUNCTIONS' => str_replace(',', ', ', (string) $config['disabled']), ]
+    );
 }
 
 if (!extension_loaded('ftp')) {
@@ -136,9 +154,12 @@ if ($is_htaccess) {
 }
 
 if ($Sum_Files > 0 && isset($Last_BU[1])) {
-    $tpl->assign_block_vars('LAST_BACKUP', [
-    'LAST_BACKUP_INFO' => $Last_BU[1],
-    'LAST_BACKUP_LINK' => $config['paths']['backup'].urlencode($Last_BU[0]),
-    'LAST_BACKUP_NAME' => $Last_BU[0], ]);
+    $tpl->assign_block_vars(
+        'LAST_BACKUP',
+        [
+        'LAST_BACKUP_INFO' => $Last_BU[1],
+        'LAST_BACKUP_LINK' => $config['paths']['backup'].urlencode($Last_BU[0]),
+        'LAST_BACKUP_NAME' => $Last_BU[0], ]
+    );
 }
 $tpl->pparse('show');

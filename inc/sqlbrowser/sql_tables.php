@@ -1,24 +1,27 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
 }
+global $config, $databases;
 //Tabellen
 echo $aus.'<h6>'.$lang['L_SQL_TABLESOFDB'].' `'.$databases['Name'][$dbid].'` '.$lang['L_SQL_EDIT'].'</h6>';
 
@@ -153,7 +156,7 @@ if (isset($_POST['t_edit_submit'])) {
     $sql_alter = 'ALTER TABLE `'.$databases['Name'][$dbid].'`.`'.$_POST['table_edit_name'].'` ';
     if ('' == $_POST['t_edit_name']) {
         echo '<p class="error">'.$lang['L_SQL_TBLNAMEEMPTY'].'</p>';
-    } elseif (MOD_NEW_VERSION && '' != $_POST['t_edit_collate'] && substr($_POST['t_edit_collate'], 0, strlen($_POST['t_edit_charset'])) != $_POST['t_edit_charset']) {
+    } elseif (MOD_NEW_VERSION && '' != $_POST['t_edit_collate'] && substr((string) $_POST['t_edit_collate'], 0, strlen($_POST['t_edit_charset'] ?? '')) != $_POST['t_edit_charset']) {
         echo '<p class="error">'.$lang['L_SQL_COLLATENOTMATCH'].'</p>';
     } else {
         if ($_POST['table_edit_name'] != $_POST['t_edit_name']) {
@@ -183,7 +186,7 @@ if (isset($_POST['t_edit_submit'])) {
     }
 } else {
     if (!isset($table_edit_name) || '' == $table_edit_name) {
-        $table_edit_name = (isset($_GET['tablename'])) ? $_GET['tablename'] : '';
+        $table_edit_name = $_GET['tablename'] ?? '';
         if (isset($_POST['tableselect'])) {
             $table_edit_name = $_POST['tableselect'];
         }
@@ -214,17 +217,17 @@ if (isset($_POST['newfield_posted'])) {
         $sql_stamm = 'ALTER TABLE `'.$databases['Name'][$dbid]."`.`$table_edit_name` ";
         $sql_alter = $sql_stamm.((isset($_POST['editfield'])) ? 'CHANGE COLUMN `'.$_POST['fieldname'].'` `'.$_POST['f_name'].'` ' : 'ADD COLUMN `'.$_POST['f_name'].'` ');
         $sql_alter .= $_POST['f_type'];
-        $wl = stripslashes($_POST['f_size']);
-        if ('' != $wl && !preg_match('@^(DATE|DATETIME|TIME|TINYBLOB|TINYTEXT|BLOB|TEXT|MEDIUMBLOB|MEDIUMTEXT|LONGBLOB|LONGTEXT)$@i', $_POST['f_type'])) {
+        $wl = stripslashes((string) $_POST['f_size']);
+        if ('' != $wl && !preg_match('@^(DATE|DATETIME|TIME|TINYBLOB|TINYTEXT|BLOB|TEXT|MEDIUMBLOB|MEDIUMTEXT|LONGBLOB|LONGTEXT)$@i', (string) $_POST['f_type'])) {
             $sql_alter .= "($wl) ";
-        } elseif ('' == $_POST['f_size'] && preg_match('@^(VARCHAR)$@i', $_POST['f_type'])) {
+        } elseif ('' == $_POST['f_size'] && preg_match('@^(VARCHAR)$@i', (string) $_POST['f_type'])) {
             $sql_alter .= '('.'255'.') ';
         } else {
             $sql_alter .= ' ';
         }
         $sql_alter .= $_POST['f_attribut'].' ';
         $sql_alter .= $_POST['f_null'].' ';
-        $sql_alter .= ('' != $_POST['f_default']) ? "DEFAULT '".addslashes($_POST['f_default'])."' " : '';
+        $sql_alter .= ('' != $_POST['f_default']) ? "DEFAULT '".addslashes((string) $_POST['f_default'])."' " : '';
 
         if (MOD_NEW_VERSION && '' != $_POST['f_collate']) {
             $sql_alter .= 'COLLATE '.$_POST['f_collate'].' ';
@@ -293,15 +296,15 @@ if ('' != $table_edit_name) {
     $fields_infos = getFieldinfos($databases['Name'][$dbid], $table_edit_name);
 
     if (MOD_NEW_VERSION) {
-        $t_engine = (isset($fields_infos['_tableinfo_']['ENGINE'])) ? $fields_infos['_tableinfo_']['ENGINE'] : 'MyISAM';
+        $t_engine = $fields_infos['_tableinfo_']['ENGINE'] ?? 'MyISAM';
     } else {
-        $t_engine = (isset($fields_infos['_tableinfo_']['TYPE'])) ? $fields_infos['_tableinfo_']['TYPE'] : 'MyISAM';
+        $t_engine = $fields_infos['_tableinfo_']['TYPE'] ?? 'MyISAM';
     }
 
-    $t_charset = (isset($fields_infos['_tableinfo_']['DEFAULT CHARSET'])) ? $fields_infos['_tableinfo_']['DEFAULT CHARSET'] : '';
-    $t_collation = isset($row['Collation']) ? $row['Collation'] : ''; //(isset($fields_infos['_tableinfo_']['COLLATE'])) ? $fields_infos['_tableinfo_']['COLLATE'] : '';
-    $t_comment = (isset($fields_infos['_tableinfo_']['COMMENT'])) ? substr($fields_infos['_tableinfo_']['COMMENT'], 1, strlen($fields_infos['_tableinfo_']['COMMENT']) - 2) : '';
-    $t_rowformat = (isset($fields_infos['_tableinfo_']['ROW_FORMAT'])) ? $fields_infos['_tableinfo_']['ROW_FORMAT'] : '';
+    $t_charset = $fields_infos['_tableinfo_']['DEFAULT CHARSET'] ?? '';
+    $t_collation = $row['Collation'] ?? ''; //(isset($fields_infos['_tableinfo_']['COLLATE'])) ? $fields_infos['_tableinfo_']['COLLATE'] : '';
+    $t_comment = (isset($fields_infos['_tableinfo_']['COMMENT'])) ? substr((string) $fields_infos['_tableinfo_']['COMMENT'], 1, strlen($fields_infos['_tableinfo_']['COMMENT'] ?? '') - 2) : '';
+    $t_rowformat = $fields_infos['_tableinfo_']['ROW_FORMAT'] ?? '';
     echo '<h6>'.$lang['L_TABLE']." `$table_edit_name`</h6>";
     $td = '<td valign="top" nowrap="nowrap" class="small">';
 
@@ -339,7 +342,7 @@ if ('' != $table_edit_name) {
             if ('NULL' == $fields_infos[$id]['default']) {
                 $d_default = 'NULL';
             } else {
-                $d_default = substr($fields_infos[$id]['default'], 1, strlen($fields_infos[$id]['default']) - 2);
+                $d_default = substr((string) $fields_infos[$id]['default'], 1, strlen($fields_infos[$id]['default'] ?? '') - 2);
             }
         }
         $d_extra = (isset($_GET['editfield'])) ? $fields_infos[$id]['extra'] : '';
@@ -378,19 +381,19 @@ if ('' != $table_edit_name) {
         echo '<td align="center">Extra<br><select name="f_extra">'.GetOptionsCombo($feldextras, $d_extra).'</select></td>';
 
         echo '</tr><tr><td align="center">'.$lang['L_SQL_INDEXES'].'<br>';
-        echo '<input type="radio" class="radio" name="f_index_new" id="k_no_index" value="no" '.((0 == $d_primary + $d_unique + $d_index + $d_fulltext) ? 'checked="checked"' : '').'>';
+        echo '<input type="radio" class="radio-custom" name="f_index_new" id="k_no_index" value="no" '.((0 == $d_primary + $d_unique + $d_index + $d_fulltext) ? 'checked="checked"' : '').'>';
         echo '<label for="k_no_index">'.$icon['key_nokey'].'</label>&nbsp;&nbsp;';
 
-        echo '<input type="radio" class="radio" name="f_index_new" id="k_primary" value="primary" '.((1 == $d_primary) ? 'checked' : '').'>';
+        echo '<input type="radio" class="radio-custom" name="f_index_new" id="k_primary" value="primary" '.((1 == $d_primary) ? 'checked' : '').'>';
         echo '<label for="k_primary">'.$icon['key_primary'].'</label>&nbsp;&nbsp;';
 
-        echo '<input type="radio" class="radio" name="f_index_new" id="k_unique" value="unique" '.((1 == $d_unique) ? 'checked' : '').'>';
+        echo '<input type="radio" class="radio-custom" name="f_index_new" id="k_unique" value="unique" '.((1 == $d_unique) ? 'checked' : '').'>';
         echo '<label for="k_unique">'.$icon['key_unique'].'</label>&nbsp;&nbsp;';
 
-        echo '<input type="radio" class="radio" name="f_index_new" id="k_index" value="index" '.((1 == $d_index) ? 'checked' : '').'>&nbsp;';
+        echo '<input type="radio" class="radio-custom" name="f_index_new" id="k_index" value="index" '.((1 == $d_index) ? 'checked' : '').'>&nbsp;';
         echo '<label for="k_index">'.$icon['index'].'</label>&nbsp;&nbsp;';
 
-        echo '<input type="checkbox" class="checkbox" name="f_indexfull" id="k_fulltext" value="1" '.((1 == $d_fulltext) ? 'checked' : '').'>';
+        echo '<input type="checkbox" class="checkbox-style" name="f_indexfull" id="k_fulltext" value="1" '.((1 == $d_fulltext) ? 'checked' : '').'>';
         echo '<label for="k_fulltext">'.$icon['key_fulltext'].'</label>&nbsp;&nbsp;</td>';
 
         echo '<td align="center" colspan="2" >'.$lang['L_COLLATION'].'<br><select name="f_collate">'.CollationCombo($d_collate).'</select></td>';
@@ -411,7 +414,7 @@ if ('' != $table_edit_name) {
         $cl = ($i % 2) ? 'dbrow' : 'dbrow1';
         if (0 == $i) {
             echo '<tr class="thead"><th colspan="2">&nbsp;</th><th>Field</th><th>Type</th><th>Size</th><th>NULL</th><th>Key</th><th>Attribute</th><th>Default</th><th>Extra</th><th>'.
-        $lang['L_COLLATION'].'</th><th>'.$lang['L_COMMENT'].'</th></tr>';
+            $lang['L_COLLATION'].'</th><th>'.$lang['L_COMMENT'].'</th></tr>';
         }
         echo '<tr class="'.$cl.'">';
         echo '<td nowrap="nowrap">';
@@ -439,7 +442,7 @@ if ('' != $table_edit_name) {
         echo '</td><td>'.$fields_infos[$i]['attributes'].'</td>';
         echo '<td>'.$fields_infos[$i]['default'].'</td>'.$td.$fields_infos[$i]['extra'].'</td>';
         echo '<td>'.((MOD_NEW_VERSION) ? $fields_infos[$i]['collate'] : '&nbsp;').'</td>';
-        echo '<td>'.((isset($fields_infos[$i]['comment'])) ? $fields_infos[$i]['comment'] : '&nbsp;').'</td>';
+        echo '<td>'.($fields_infos[$i]['comment'] ?? '&nbsp;').'</td>';
         echo '</tr>';
     }
     echo '</table><br>';
@@ -502,23 +505,23 @@ if ('' != $table_edit_name) {
 
     if ((isset($_GET['sql_createindex'])) && ('1' == $_GET['sql_createindex'])) { ?>
 <script>
-	function toggleIndexLength(id)
-	{
-		var mysqlStrings = ['<?php echo implode("','", $mysql_string_types); ?>'];
-		var field = 'setNewKey'+id;
-		var sel = document.getElementById(field).selectedIndex;
-		var val = document.getElementById(field).options[sel].innerHTML;
-		document.getElementById('indexSize'+id).disabled = true;
-		for (i=0;i<mysqlStrings.length;i++)
-		{
-			if (val.indexOf("["+mysqlStrings[i]) != -1)
-			{
-				document.getElementById('indexSize'+id).disabled = false;
-			}
-		}
-	}
+    function toggleIndexLength(id)
+    {
+        var mysqlStrings = ['<?php echo implode("','", $mysql_string_types); ?>'];
+        var field = 'setNewKey'+id;
+        var sel = document.getElementById(field).selectedIndex;
+        var val = document.getElementById(field).options[sel].innerHTML;
+        document.getElementById('indexSize'+id).disabled = true;
+        for (i=0;i<mysqlStrings.length;i++)
+        {
+            if (val.indexOf("["+mysqlStrings[i]) != -1)
+            {
+                document.getElementById('indexSize'+id).disabled = false;
+            }
+        }
+    }
 </script>
-    <?php
+        <?php
         echo '<br><a name="setnewkeys"></a>';
         echo '<form action="'.$p.'" method="POST">';
         echo '<h6>'.$lang['L_SETKEYSFOR'].' `'.$table_edit_name.'`</h6>';
@@ -565,7 +568,7 @@ if ('' != $table_edit_name) {
                 echo '<select id="setNewKey'.$i.'" name="setNewKey'.$i.'" onchange="toggleIndexLength('.$i.');">';
                 echo $options."\n".'</select></td>';
                 echo '<td>';
-                $type = explode('(', $selectedFeldTyp);
+                $type = explode('(', (string) $selectedFeldTyp);
                 echo '<input type="text" id="indexSize'.$i.'" name="indexSize'.$i.'" value="" size="10" class="text"';
                 if (!isset($type[0]) || !in_array($type[0], $mysql_string_types)) {
                     echo ' disabled="disabled"';

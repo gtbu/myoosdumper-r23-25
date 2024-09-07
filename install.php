@@ -1,26 +1,29 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 define('OOS_VALID_MOD', true);
 
 if (!@ob_start('ob_gzhandler')) {
     @ob_start();
 }
+global $config;
 
 $install_ftp_server = $install_ftp_user_name = $install_ftp_user_pass = $install_ftp_path = '';
 $dbhost = $dbuser = $dbpass = $dbport = $dbsocket = $manual_db = '';
@@ -30,18 +33,18 @@ foreach ($_GET as $getvar => $getval) {
 foreach ($_POST as $postvar => $postval) {
     ${$postvar} = $postval;
 }
-include_once './inc/functions.php';
-include_once './inc/mysqli.php';
-include_once './inc/runtime.php';
+require_once './inc/functions.php';
+require_once './inc/mysqli.php';
+require_once './inc/runtime.php';
 if (!isset($language)) {
     $language = 'en';
 }
 
 $config['language'] = $language;
-include './language/lang_list.php';
-include 'language/'.$language.'/lang_install.php';
-include 'language/'.$language.'/lang_main.php';
-include 'language/'.$language.'/lang_config_overview.php';
+require './language/lang_list.php';
+require 'language/'.$language.'/lang_install.php';
+require 'language/'.$language.'/lang_main.php';
+require 'language/'.$language.'/lang_config_overview.php';
 
 // Passing the parameters via FORM
 if (isset($_POST['dbhost'])) {
@@ -54,7 +57,7 @@ if (isset($_POST['dbhost'])) {
 } else {
     // If connection string exists -> read connection data from connstr
     if (isset($connstr) && !empty($connstr)) {
-        $p = explode('|', $connstr);
+        $p = explode('|', (string) $connstr);
         $dbhost = $config['dbhost'] = $p[0];
         $dbuser = $config['dbuser'] = $p[1];
         $dbpass = $config['dbpass'] = $p[2];
@@ -67,9 +70,9 @@ if (isset($_POST['dbhost'])) {
 }
 
 //Variabeln
-$phase = (isset($phase)) ? $phase : 0;
+$phase ??= 0;
 if (isset($_POST['manual_db'])) {
-    $manual_db = trim($_POST['manual_db']);
+    $manual_db = trim((string) $_POST['manual_db']);
 }
 $connstr = "$dbhost|$dbuser|$dbpass|$dbport|$dbsocket|$manual_db";
 $connection = '';
@@ -84,63 +87,60 @@ header('content-type: text/html; charset=utf-8');
 <!DOCTYPE HTML>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="robots" content="noindex,nofollow">
-	<meta http-equiv="X-UA-Compatible" content="IE=Edge">
-	<meta http-equiv="pragma" content="no-cache">
-	<meta http-equiv="expires" content="0">
-	<meta http-equiv="cache-control" content="must-revalidate">
-	<title>MyOOS [Dumper]  - Installation</title>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex,nofollow">
+    <meta http-equiv="cache-control" content="must-revalidate">
+    <title>MyOOS [Dumper]  - Installation</title>
 
-	<link rel="stylesheet" type="text/css" href="css/mod/style.css">
-	<script src="js/script.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="css/mod/style.css">
+    <script src="js/script.js" type="text/javascript"></script>
 <style type="text/css" media="screen">
 td {
-	border: 1px solid #ddd;
+    border: 1px solid #ddd;
 }
 
 td table td {
-	border: 0;
+    border: 0;
 }
 </style>
 </head>
 <body class="content">
 <script>
 function hide_tooldivs() {
-	<?php
+    <?php
     foreach ($lang['languages'] as $key) {
         echo 'document.getElementById("'.$key.'").style.display = \'none\';'."\n";
     }
-    ?>
+?>
 }
 
 function show_tooldivs(lab) {
-	hide_tooldivs();
-	switch(lab) {
-		<?php
-        foreach ($lang['languages'] as $key) {
-            echo 'case "'.$key.'":'."\n".'document.getElementById("'.$key.'").style.display = \'block\';'."\n".'break;'."\n";
-        }
-        ?>
+    hide_tooldivs();
+    switch(lab) {
+        <?php
+    foreach ($lang['languages'] as $key) {
+        echo 'case "'.$key.'":'."\n".'document.getElementById("'.$key.'").style.display = \'block\';'."\n".'break;'."\n";
+    }
+?>
 
-	}
+    }
 }
 </script>
 
 <?php
 if ($phase < 10) {
-            if (0 == $phase) {
-                $content = $lang['L_INSTALL'].' - '.$lang['L_INSTALLMENU'];
-            } else {
-                $content = $lang['L_INSTALL'].' - '.$lang['L_STEP'].' '.($phase);
-            }
-        } elseif ($phase > 9 && $phase < 12) {
-            $content = $lang['L_INSTALL'].' - '.$lang['L_STEP'].' '.($phase - 7);
-        } elseif ($phase > 19 && $phase < 100) {
-            $content = $lang['L_TOOLS'];
-        } else {
-            $content = $lang['L_UNINSTALL'].' - '.$lang['L_STEP'].' '.($phase - 99);
-        }
+    if (0 == $phase) {
+        $content = $lang['L_INSTALL'].' - '.$lang['L_INSTALLMENU'];
+    } else {
+        $content = $lang['L_INSTALL'].' - '.$lang['L_STEP'].' '.($phase);
+    }
+} elseif ($phase > 9 && $phase < 12) {
+    $content = $lang['L_INSTALL'].' - '.$lang['L_STEP'].' '.($phase - 7);
+} elseif ($phase > 19 && $phase < 100) {
+    $content = $lang['L_TOOLS'];
+} else {
+    $content = $lang['L_UNINSTALL'].' - '.$lang['L_STEP'].' '.($phase - 99);
+}
 
 echo '<img src="css/mod/pics/h1_logo.gif" alt="'.$lang['L_INSTALL_TOMENU'].'">';
 echo '<div id="pagetitle"><p>
@@ -184,33 +184,33 @@ switch ($phase) {
 
             if (!isset($_POST['dbconnect'])) {
                 // Erstaufruf - Daten aus config.php auslesen
-                for ($i = 0; $i < count($tmp); ++$i) {
-                    if ('$config[\'dbhost\']' == substr($tmp[$i], 0, 17)) {
+                for ($i = 0; $i < (is_countable($tmp) ? count($tmp) : 0); ++$i) {
+                    if (str_starts_with($tmp[$i], '$config[\'dbhost\']')) {
                         $config['dbhost'] = extractValue($tmp[$i]);
                         $dbhost = $config['dbhost'];
                         ++$stored;
                     }
-                    if ('$config[\'dbport\']' == substr($tmp[$i], 0, 17)) {
+                    if (str_starts_with($tmp[$i], '$config[\'dbport\']')) {
                         $config['dbport'] = extractValue($tmp[$i]);
                         $dbport = $config['dbport'];
                         ++$stored;
                     }
-                    if ('$config[\'dbsocket\']' == substr($tmp[$i], 0, 19)) {
+                    if (str_starts_with($tmp[$i], '$config[\'dbsocket\']')) {
                         $config['dbsocket'] = extractValue($tmp[$i]);
                         $dbsocket = $config['dbsocket'];
                         ++$stored;
                     }
-                    if ('$config[\'dbuser\']' == substr($tmp[$i], 0, 17)) {
+                    if (str_starts_with($tmp[$i], '$config[\'dbuser\']')) {
                         $config['dbuser'] = extractValue($tmp[$i]);
                         $dbuser = $config['dbuser'];
                         ++$stored;
                     }
-                    if ('$config[\'dbpass\']' == substr($tmp[$i], 0, 17)) {
+                    if (str_starts_with($tmp[$i], '$config[\'dbpass\']')) {
                         $config['dbpass'] = extractValue($tmp[$i]);
                         $dbpass = $config['dbpass'];
                         ++$stored;
                     }
-                    if ('$config[\'language\']' == substr($tmp[$i], 0, 19)) {
+                    if (str_starts_with($tmp[$i], '$config[\'language\']')) {
                         $config['language'] = extractValue($tmp[$i]);
                         ++$stored;
                     }
@@ -258,7 +258,7 @@ switch ($phase) {
                     }
                     if (!isset($databases['Name']) || !in_array($manual_db, $databases['Name'])) {
                         // conect to manual db was not successful
-                        $connstr = substr($connstr, 0, strlen($connstr) - strlen($manual_db));
+                        $connstr = substr($connstr, 0, strlen($connstr ?? '') - strlen($manual_db ?? ''));
                         $manual_db = '';
                     }
                 }
@@ -288,24 +288,24 @@ switch ($phase) {
         echo '<h6>MyOOS [Dumper] - '.$lang['L_CONFBASIC'].'</h6>';
         $tmp = @file('config.php');
         $stored = 0;
-        for ($i = 0; $i < count($tmp); ++$i) {
-            if ('$config[\'dbhost\']' == substr($tmp[$i], 0, 17)) {
+        for ($i = 0; $i < (is_countable($tmp) ? count($tmp) : 0); ++$i) {
+            if (str_starts_with($tmp[$i], '$config[\'dbhost\']')) {
                 $tmp[$i] = '$config[\'dbhost\'] = \''.$dbhost.'\';'."\n";
                 ++$stored;
             }
-            if ('$config[\'dbport\']' == substr($tmp[$i], 0, 17)) {
+            if (str_starts_with($tmp[$i], '$config[\'dbport\']')) {
                 $tmp[$i] = '$config[\'dbport\'] = \''.$dbport.'\';'."\n";
                 ++$stored;
             }
-            if ('$config[\'dbsocket\']' == substr($tmp[$i], 0, 19)) {
+            if (str_starts_with($tmp[$i], '$config[\'dbsocket\']')) {
                 $tmp[$i] = '$config[\'dbsocket\'] = \''.$dbsocket.'\';'."\n";
                 ++$stored;
             }
-            if ('$config[\'dbuser\']' == substr($tmp[$i], 0, 17)) {
+            if (str_starts_with($tmp[$i], '$config[\'dbuser\']')) {
                 $tmp[$i] = '$config[\'dbuser\'] = \''.$dbuser.'\';'."\n";
                 ++$stored;
             }
-            if ('$config[\'dbpass\']' == substr($tmp[$i], 0, 17)) {
+            if (str_starts_with($tmp[$i], '$config[\'dbpass\']')) {
                 $tmp[$i] = '$config[\'dbpass\'] = \''.$dbpass.'\';'."\n";
                 ++$stored;
             }
@@ -338,7 +338,7 @@ switch ($phase) {
         if (isset($_POST['submit'])) {
             $ret = true;
             if ($fp = fopen('config.php', 'wb')) {
-                if (!fwrite($fp, stripslashes(stripslashes($_POST['configfile'])))) {
+                if (!fwrite($fp, stripslashes(stripslashes((string) $_POST['configfile'])))) {
                     $ret = false;
                 }
                 if (!fclose($fp)) {
@@ -423,7 +423,7 @@ switch ($phase) {
     case 101:
         echo '<h6>'.$lang['L_UI5'].'</h6>';
         $paths = [];
-        $w = substr($config['paths']['work'], 0, strlen($config['paths']['work']) - 1);
+        $w = substr((string) $config['paths']['work'], 0, strlen($config['paths']['work'] ?? '') - 1);
         if (is_dir($w)) {
             $res = rec_rmdir($w);
         } else {
@@ -537,12 +537,12 @@ function Rechte($file)
 
 function extractValue($s)
 {
-    $r = trim(substr($s, strpos($s, '=') + 1));
-    $r = substr($r, 0, strlen($r) - 1);
-    if ("'" == substr($r, -1) || '"' == substr($r, -1)) {
-        $r = substr($r, 0, strlen($r) - 1);
+    $r = trim((string) substr((string) $s, strpos((string) $s, '=') + 1));
+    $r = substr($r, 0, strlen($r ?? '') - 1);
+    if (str_ends_with($r, "'") || str_ends_with($r, '"')) {
+        $r = substr($r, 0, strlen($r ?? '') - 1);
     }
-    if ("'" == substr($r, 0, 1) || '"' == substr($r, 0, 1)) {
+    if (str_starts_with($r, "'") || str_starts_with($r, '"')) {
         $r = substr($r, 1);
     }
 

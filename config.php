@@ -1,4 +1,23 @@
 <?php
+/**
+ * ---------------------------------------------------------------------
+
+   MyOOS [Dumper]
+   https://www.oos-shop.de/
+
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
+   ----------------------------------------------------------------------
+   Based on:
+
+   MySqlDumper
+   https://www.mysqldumper.de
+
+   Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
+   ----------------------------------------------------------------------
+   Released under the GNU General Public License
+   ----------------------------------------------------------------------
+ */
+
 
 // MyOOS [Dumper] Configuration
 
@@ -101,9 +120,10 @@ $config['sftp_port'][0] = '22'; // Port
 $config['sftp_user'][0] = ''; // Username
 $config['sftp_pass'][0] = ''; // Password
 $config['sftp_dir'][0] = ''; // Upload-Directory
-$config['sftp_path_to_private_key'][0] = null; // private key (optional, default: null) can be used instead of password, set to null if password is set
-$config['sftp_secret_passphrase_for_private_key'][0] = null;  // passphrase (optional, default: null), set to null if privateKey is not used or has no passphrase
-$config['sftp_fingerprint'][0] = null; // host fingerprint (optional, default: null),
+$config['sftp_foreig'][0] = 0;
+$config['sftp_path_to_private_key'][0] = ''; // private key (optional) can be used instead of password, set to null if password is set
+$config['sftp_secret_passphrase_for_private_key'][0] = '';  // passphrase (optional), set to ''  if privateKey is not used or has no passphrase
+$config['sftp_fingerprint'][0] = ''; // host fingerprint (optional),
 
 $config['sftp_transfer'][1] = 0;
 $config['sftp_timeout'][1] = 30;
@@ -112,9 +132,10 @@ $config['sftp_port'][1] = '22';
 $config['sftp_user'][1] = '';
 $config['sftp_pass'][1] = '';
 $config['sftp_dir'][1] = '';
-$config['sftp_path_to_private_key'][1] = null;
-$config['sftp_secret_passphrase_for_private_key'][1] = null;
-$config['sftp_fingerprint'][1] = null;
+$config['sftp_foreig'][1] = 0;
+$config['sftp_path_to_private_key'][1] = '';
+$config['sftp_secret_passphrase_for_private_key'][1] = '';
+$config['sftp_fingerprint'][1] = '';
 
 $config['sftp_transfer'][2] = 0;
 $config['sftp_timeout'][2] = 30;
@@ -123,9 +144,10 @@ $config['sftp_port'][2] = '22';
 $config['sftp_user'][2] = '';
 $config['sftp_pass'][2] = '';
 $config['sftp_dir'][2] = '';
-$config['sftp_path_to_private_key'][2] = null;
-$config['sftp_secret_passphrase_for_private_key'][2] = null;
-$config['sftp_fingerprint'][2] = null;
+$config['sftp_foreig'][2] = 0;
+$config['sftp_path_to_private_key'][2] = '';
+$config['sftp_secret_passphrase_for_private_key'][2] = '';
+$config['sftp_fingerprint'][2] = '';
 
 //Multipart 0=off 1=on
 $config['multi_part'] = 0;
@@ -141,8 +163,8 @@ $config['max_backup_files'] = 3;
 $config['cron_configurationfile'] = 'myoosdumper.conf.php';
 //path to perl, for windows use e.g. C:perlbinperl.exe
 $config['cron_perlpath'] = '/usr/bin/perl';
-//mailer use sendmail(1) or SMTP(0)
-$config['cron_use_sendmail'] = 1;
+//mailer use sendmail(1) or SMTP(0) or other SMPT(3) or PHP Default(4)
+$config['cron_use_mail'] = 1;
 //path to sendmail
 $sendmail_path = ini_get('sendmail_path');
 $config['cron_sendmail'] = $sendmail_path > '' ? $sendmail_path : '/usr/lib/sendmail -t -oi -oem';
@@ -151,6 +173,15 @@ $config['cron_sendmail'] = $sendmail_path > '' ? $sendmail_path : '/usr/lib/send
 $config['cron_smtp'] = 'localhost';
 //smtp-port
 $config['cron_smtp_port'] = 25;
+
+$config['other_smtp_host'] = '';
+// non = 0; SSL = 1  TLS = 2
+$config['other_smtp_encryption'] = '2';
+$config['other_smtp_port'] = '587';
+$config['other_smtp_username'] = '';
+$config['other_smtp_password'] = '';
+$config['other_smtp_auth'] = '';
+
 $config['cron_extender'] = 0;
 $config['cron_compression'] = 1;
 $config['cron_printout'] = 1;
@@ -160,4 +191,4 @@ $config['multi_dump'] = 0;
 $config['logcompression'] = 1;
 $config['log_maxsize1'] = 1;
 $config['log_maxsize2'] = 2;
-$config['log_maxsize'] = 1048576;
+$config['log_maxsize'] = 1_048_576;

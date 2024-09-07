@@ -1,27 +1,31 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2017 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
 }
 
+global $config;
+
 //SQL-Library laden
-include './inc/sqllib.php';
+require './inc/sqllib.php';
 
 if (!isset($config['sql_limit'])) {
     $config['sql_limit'] = 30;
@@ -55,7 +59,7 @@ function WriteSQL()
     $str = '';
     for ($i = 0; $i < count($SQL_ARRAY); ++$i) {
         $str .= $SQL_ARRAY[$i];
-        if ("\n" != substr($str, -1) && $i != (count($SQL_ARRAY) - 1)) {
+        if (!str_ends_with($str, "\n") && $i != (count($SQL_ARRAY) - 1)) {
             $str .= "\n";
         }
     }
@@ -68,7 +72,7 @@ function WriteSQL()
 function SQL_Name($index)
 {
     global $SQL_ARRAY;
-    $s = explode('|', $SQL_ARRAY[$index]);
+    $s = explode('|', (string) $SQL_ARRAY[$index]);
     return $s[0];
 }
 
@@ -76,8 +80,8 @@ function SQL_String($index)
 {
     global $SQL_ARRAY;
     if (isset($SQL_ARRAY[$index]) && !empty($SQL_ARRAY[$index])) {
-        $s = explode('|', $SQL_ARRAY[$index], 2);
-        return (isset($s[1])) ? $s[1] : '';
+        $s = explode('|', (string) $SQL_ARRAY[$index], 2);
+        return $s[1] ?? '';
     }
 }
 
@@ -89,7 +93,7 @@ function SQL_ComboBox()
         $s = $nl.$nl.'<select class="SQLCombo" name="sqlcombo" onchange="this.form.sqltextarea.value=this.options[this.selectedIndex].value;">'.$nl;
         $s .= '<option value="" selected>---</option>'.$nl;
         for ($i = 0; $i < count($SQL_ARRAY); ++$i) {
-            $s .= '<option value="'.htmlspecialchars(stripslashes(SQL_String($i))).'">'.SQL_Name($i).'</option>'.$nl;
+            $s .= '<option value="'.htmlspecialchars(stripslashes((string) SQL_String($i))).'">'.SQL_Name($i).'</option>'.$nl;
         }
         $s .= '</select>'.$nl.$nl;
     }
@@ -137,7 +141,7 @@ function DB_Exists($db)
 
     $dbs = mod_query('SHOW DATABASES');
     while ($row = mysqli_fetch_assoc($dbs)) {
-        if (strtolower($row['Database']) == strtolower($db)) {
+        if (strtolower($row['Database']) == strtolower((string) $db)) {
             $erg = true;
             break;
         }
@@ -174,14 +178,14 @@ function DB_Empty($dbn)
 function sqlReturnsRecords($sql)
 {
     global $mysql_SQLhasRecords;
-    $s = explode(' ', $sql);
+    $s = explode(' ', (string) $sql);
     return in_array(strtoupper($s[0]), $mysql_SQLhasRecords) ? 1 : 0;
 }
 
 function getCountSQLStatements($sql)
 {
     $z = 0;
-    $l = strlen($sql);
+    $l = strlen((string) $sql);
     $inQuotes = false;
     for ($i = 0; $i < $l; ++$i) {
         if ("'" == $sql[$i] || '"' == $sql[$i]) {
@@ -199,7 +203,7 @@ function splitSQLStatements2Array($sql)
     $z = 0;
     $sqlArr = [];
     $tmp = '';
-    $sql = str_replace("\n", '', $sql);
+    $sql = str_replace("\n", '', (string) $sql);
     $l = strlen($sql);
     $inQuotes = false;
     for ($i = 0; $i < $l; ++$i) {
@@ -213,7 +217,7 @@ function splitSQLStatements2Array($sql)
             $tmp = '';
         }
     }
-    if ('' != trim($tmp)) {
+    if ('' != trim((string) $tmp)) {
         $sqlArr[] = $tmp;
     }
     return $sqlArr;
@@ -236,14 +240,14 @@ function DB_Copy($source, $destination, $drop_source = 0, $insert_data = 1)
     $sql = "SHOW TABLES FROM $source";
     $tabellen = mod_query($sql);
     while ($row = mysqli_fetch_row($tabellen)) {
-        $table = strtolower($row[0]);
+        $table = strtolower((string) $row[0]);
         $sqlt = "SHOW CREATE TABLE `$source`.`$table`";
         $res = mod_query($sqlt);
         if ($res) {
             $row = mysqli_fetch_row($res);
             $c = $row[1];
-            if (';' == substr($c, -1)) {
-                $c = substr($c, 0, strlen($c) - 1);
+            if (str_ends_with((string) $c, ';')) {
+                $c = substr((string) $c, 0, strlen((string) $c) - 1);
             }
             $SQL_Array .= (1 == $insert_data) ? "$c SELECT * FROM `$source`.`$table` ;\n" : "$c ;\n";
         } else {
@@ -269,10 +273,10 @@ function Table_Copy($source, $destination, $insert_data, $destinationdb = '')
     $res = mod_query($sqlc);
     $row = mysqli_fetch_row($res);
     $c = $row[1];
-    $a1 = strpos($c, '`');
-    $a2 = strpos($c, '`', $a1 + 1);
-    $c = substr($c, 0, $a1 + 1).$destination.substr($c, $a2);
-    if (';' == substr($c, -1)) {
+    $a1 = strpos((string) $c, '`');
+    $a2 = strpos((string) $c, '`', $a1 + 1);
+    $c = substr((string) $c, 0, $a1 + 1).$destination.substr((string) $c, $a2);
+    if (str_ends_with($c, ';')) {
         $c = substr($c, 0, strlen($c) - 1);
     }
     $SQL_Array .= (1 == $insert_data) ? "$c SELECT * FROM $source ;\n" : "$c ;\n";
@@ -297,7 +301,7 @@ function MOD_DoSQL($sqlcommands, $limit = '')
     }
     $out = $sqlcommand = '';
     $allSQL = splitSQLStatements2Array($sqlcommands); //explode(';',preg_replace('/\r\n|\n/', '', $sqlcommands));
-    $sql_queries = count($allSQL);
+    $sql_queries = is_countable($allSQL) ? count($allSQL) : 0;
 
     if (!isset($allSQL[$sql_queries - 1])) {
         --$sql_queries;
@@ -310,7 +314,7 @@ function MOD_DoSQL($sqlcommands, $limit = '')
     } else {
         $result = true;
         for ($i = 0; $i < $sql_queries; ++$i) {
-            $allSQL[$i] = trim(rtrim($allSQL[$i]));
+            $allSQL[$i] = trim((string) rtrim((string) $allSQL[$i]));
 
             if ('' != $allSQL[$i]) {
                 $sqlcommand .= $allSQL[$i];
@@ -350,10 +354,10 @@ function SQLParser($command, $debug = 0)
         $sql['parser']['comment'] = 0;
     }
     $Backslash = chr(92);
-    $s = rtrim(trim(($command)));
+    $s = rtrim(trim((string) ($command)));
 
     //Was ist das für eine Anfrage ?
-    if ('#' == substr($s, 0, 1) || '--' == substr($s, 0, 2)) {
+    if (str_starts_with($s, '#') || str_starts_with($s, '--')) {
         ++$sql['parser']['comment'];
         $s = '';
     } elseif ('DROP ' == strtoupper(substr($s, 0, 5))) {
@@ -382,7 +386,7 @@ function SQLParser($command, $debug = 0)
         $tb = explode(',', $st);
         for ($i = 0; $i < count($tb); ++$i) {
             $first = $B_Esc = $B_Ticks = $B_Dashes = 0;
-            $v = trim($tb[$i]);
+            $v = trim((string) $tb[$i]);
             //Ticks + Dashes zählen
             for ($cpos = 2; $cpos <= strlen($v); ++$cpos) {
                 if ("'" == substr($v, (-1 * $cpos), 1)) {
@@ -416,7 +420,7 @@ function SQLParser($command, $debug = 0)
                 $sql['parser']['start'] = 1;
                 $sql['parser']['end'] = 1;
             }
-            if (0 == $sql['parser']['start'] && '0X' == substr($v, 0, 2) && false == strpos($v, ' ')) {
+            if (0 == $sql['parser']['start'] && str_starts_with($v, '0X') && !str_contains($v, ' ')) {
                 $sql['parser']['start'] = 1;
                 $sql['parser']['end'] = 1;
             }
@@ -425,14 +429,14 @@ function SQLParser($command, $debug = 0)
                 $sql['parser']['end'] = 1;
             }
 
-            if ("'" == substr($v, 0, 1) && 0 == $sql['parser']['start']) {
+            if (str_starts_with($v, "'") && 0 == $sql['parser']['start']) {
                 $sql['parser']['start'] = 1;
                 if (1 == strlen($v)) {
                     $first = 1;
                 }
                 $DELIMITER = "'";
             }
-            if ('"' == substr($v, 0, 1) && 0 == $sql['parser']['start']) {
+            if (str_starts_with($v, '"') && 0 == $sql['parser']['start']) {
                 $sql['parser']['start'] = 1;
                 if (1 == strlen($v)) {
                     $first = 1;
@@ -473,7 +477,7 @@ function SQLOutput($sqlcommand, $meldung = '')
     global $sql, $lang;
     $s = '<h6 align="center">'.$lang['L_SQL_OUTPUT'].'</h6><div id="sqloutbox"><strong>';
     if ('' != $meldung) {
-        $s .= trim($meldung);
+        $s .= trim((string) $meldung);
     }
 
     if (isset($sql['parser']['sql_commands'])) {
@@ -517,9 +521,9 @@ function GetCreateTable($db, $tabelle)
 
 function KindSQL($sql)
 {
-    if (preg_match('@^((-- |#)[^\n]*\n|/\*.*?\*/)*(DROP|CREATE)[[:space:]]+(IF EXISTS[[:space:]]+)?(TABLE|DATABASE)[[:space:]]+(.+)@im', $sql)) {
+    if (preg_match('@^((-- |#)[^\n]*\n|/\*.*?\*/)*(DROP|CREATE)[[:space:]]+(IF EXISTS[[:space:]]+)?(TABLE|DATABASE)[[:space:]]+(.+)@im', (string) $sql)) {
         return 2;
-    } elseif (preg_match('@^((-- |#)[^\n]*\n|/\*.*?\*/)*(DROP|CREATE)[[:space:]]+(IF EXISTS[[:space:]]+)?(TABLE|DATABASE)[[:space:]]+(.+)@im', $sql)) {
+    } elseif (preg_match('@^((-- |#)[^\n]*\n|/\*.*?\*/)*(DROP|CREATE)[[:space:]]+(IF EXISTS[[:space:]]+)?(TABLE|DATABASE)[[:space:]]+(.+)@im', (string) $sql)) {
         return 1;
     }
 }
@@ -534,14 +538,14 @@ function GetPostParams()
     $limitstart = $_POST['limitstart'];
     $order = $_POST['order'];
     $orderdir = $_POST['orderdir'];
-    $sql['sql_statement'] = (isset($_POST['sql_statement'])) ? $_POST['sql_statement'] : "SELECT * FROM `$tablename`";
+    $sql['sql_statement'] = $_POST['sql_statement'] ?? "SELECT * FROM `$tablename`";
 }
 
 // when fieldnames contain spaces or dots they are replaced with underscores
 // we need to built the same index to get the postet values for inserts and updates
 function correct_post_index($index)
 {
-    $index = str_replace(' ', '_', $index);
+    $index = str_replace(' ', '_', (string) $index);
     $index = str_replace('.', '_', $index);
     return $index;
 }
@@ -569,7 +573,7 @@ function ComboCommandDump($when, $index, $disabled = '')
         $r .= '<option value="" '.(('' == $csql) ? ' selected="selected"' : '').'>&nbsp;</option>'."\n";
         if (is_array($SQL_ARRAY) && count($SQL_ARRAY) > 0) {
             for ($i = 0; $i < count($SQL_ARRAY); ++$i) {
-                $s = trim(SQL_String($i));
+                $s = trim((string) SQL_String($i));
                 $r .= '<option value="'.htmlspecialchars($s).'" '.(($csql == $s) ? ' selected="selected"' : '').'>'.SQL_Name($i).'</option>'."\n";
             }
         }
@@ -646,12 +650,12 @@ function GetCollationArray()
     if (is_array($r)) {
         for ($i = 0; $i < $num; ++$i) {
             $row = mysqli_fetch_array($res);
-            $r[$i]['Collation'] = isset($row['Collation']) ? $row['Collation'] : '';
-            $r[$i]['Charset'] = isset($row['Charset']) ? $row['Charset'] : '';
-            $r[$i]['Id'] = isset($row['Id']) ? $row['Id'] : '';
-            $r[$i]['Default'] = isset($row['Default']) ? $row['Default'] : '';
-            $r[$i]['Compiled'] = isset($row['Compiled']) ? $row['Compiled'] : '';
-            $r[$i]['Sortlen'] = isset($row['Sortlen']) ? $row['Sortlen'] : '';
+            $r[$i]['Collation'] = $row['Collation'] ?? '';
+            $r[$i]['Charset'] = $row['Charset'] ?? '';
+            $r[$i]['Id'] = $row['Id'] ?? '';
+            $r[$i]['Default'] = $row['Default'] ?? '';
+            $r[$i]['Compiled'] = $row['Compiled'] ?? '';
+            $r[$i]['Sortlen'] = $row['Sortlen'] ?? '';
         }
     }
     return $r;
@@ -667,7 +671,7 @@ function CollationCombo($default = '', $withcharset = 0)
         $s = '';
         $s = '<option value=""'.(('' == $default) ? ' selected="selected"' : '').'></option>';
         $group = '';
-        for ($i = 0; $i < count($r); ++$i) {
+        for ($i = 0; $i < (is_countable($r) ? count($r) : 0); ++$i) {
             $gc = $r[$i]['Charset'];
             if ($gc != $group) {
                 $group = $gc;
@@ -697,7 +701,7 @@ function simple_bbcode_conversion($a)
     $tag_end = '';
 
     //replacements
-    $a = nl2br($a);
+    $a = nl2br((string) $a);
     $a = str_replace('<br>', ' <br>', $a);
     $a = str_replace('<br />', ' <br>', $a);
 
@@ -724,7 +728,7 @@ function simple_bbcode_conversion($a)
     $a = preg_replace("/\[quote(.*?)\](.*?)\[\/quote(.*?)\]/si", '<p align="left" style="border: 2px solid silver;padding:4px;">$2</p>', $a);
     $a = preg_replace("/\[code(.*?)\](.*?)\[\/code(.*?)\]/si", '<p align="left" style="border: 2px solid red;color:green;padding:4px;">$2</p>', $a);
     $a = preg_replace("/\[hide\](.*?)\[\/hide\]/si", '<div style="background-color:#ccffcc;">$1</div>', $a);
-    $a = preg_replace("/(^|\s)+((http:\/\/)|(www.))(.+)(\s|$)+/Uis", ' <a href="http://$4$5" target="_blank">http://$4$5</a> ', $a);
+    $a = preg_replace("/(^|\s)+((http:\/\/)|(www.))(.+)(\s|$)+/Uis", ' <a href="http://$4$5" target="_blank" rel="noopener">http://$4$5</a> ', $a);
     return $tag_start.$a.$tag_end;
 }
 
@@ -732,10 +736,10 @@ function ExtractTablenameFromSQL($q)
 {
     global $databases, $db, $dbid;
     $tablename = '';
-    if (strlen($q) > 100) {
-        $q = substr($q, 0, 100);
+    if (strlen((string) $q) > 100) {
+        $q = substr((string) $q, 0, 100);
     }
-    $p = trim($q);
+    $p = trim((string) $q);
     // if we get a list of tables - no current table is selected -> return ''
     if ('SHOW TABLE STATUS' == strtoupper(substr($p, 0, 17))) {
         return '';
@@ -800,8 +804,8 @@ function ExtractTablenameFromSQL($q)
         //echo "<br>" . $db;
         $tablename = $p[1];
     }
-    //	if (Table_Exists($databases['db_actual'], $tablename)) return $tablename;
-    //	else return '';
+    //    if (Table_Exists($databases['db_actual'], $tablename)) return $tablename;
+    //    else return '';
     return $tablename;
 }
 
@@ -810,7 +814,7 @@ function GetOptionsCombo($arr, $default)
     global $feldtypen, $feldattribute, $feldnull, $feldextras, $feldkeys, $feldrowformat;
     $r = '';
     foreach ($arr as $s) {
-        $r .= '<option value="'.$s.'" '.((strtoupper($default) == strtoupper($s)) ? ' selected="selected"' : '').'>'.$s.'</option>'."\n";
+        $r .= '<option value="'.$s.'" '.((strtoupper((string) $default) == strtoupper((string) $s)) ? ' selected="selected"' : '').'>'.$s.'</option>'."\n";
     }
     return $r;
 }
@@ -891,15 +895,15 @@ function getFieldinfos($db, $tabelle)
         }
         $fields_infos[$i]['size'] = get_attribut_size_from_type($fields_infos[$i]['type']);
         // remove size from type for readability in output
-        $fields_infos[$i]['type'] = str_replace('('.$fields_infos[$i]['size'].')', '', $fields_infos[$i]['type']);
+        $fields_infos[$i]['type'] = str_replace('('.$fields_infos[$i]['size'].')', '', (string) $fields_infos[$i]['type']);
         // look for attributes, everthing behind the first space is an atribut
         $attributes = explode(' ', $fields_infos[$i]['type'], 2);
         if (isset($attributes[1])) {
             // we found attributes
             unset($attributes[0]); // delete type
-            $fields_infos[$i]['attributes'] = trim(implode(' ', $attributes)); //merge all other attributes
+            $fields_infos[$i]['attributes'] = trim((string) implode(' ', $attributes)); //merge all other attributes
             // remove attributes from type
-            $fields_infos[$i]['type'] = trim(str_replace($fields_infos[$i]['attributes'], '', $fields_infos[$i]['type']));
+            $fields_infos[$i]['type'] = trim((string) str_replace($fields_infos[$i]['attributes'], '', $fields_infos[$i]['type']));
         }
         if (isset($row['NULL'])) {
             $fields_infos[$i]['null'] = $row['NULL'];
@@ -926,10 +930,10 @@ function getFieldinfos($db, $tabelle)
     $res = mod_query($sql);
     while ($row = mysqli_fetch_array($res, MYSQLI_ASSOC)) {
         //v($row);
-        $key_name = isset($row['Key_name']) ? $row['Key_name'] : '';
-        $index_type = isset($row['Index_type']) ? $row['Index_type'] : '';
-        $column_name = isset($row['Column_name']) ? $row['Column_name'] : '';
-        $non_unique = isset($row['Non_unique']) ? $row['Non_unique'] : '';
+        $key_name = $row['Key_name'] ?? '';
+        $index_type = $row['Index_type'] ?? '';
+        $column_name = $row['Column_name'] ?? '';
+        $non_unique = $row['Non_unique'] ?? '';
         if ($column_name > '') {
             // first find indexnr of field
             for ($index = 0, $count = sizeof($fields_infos); $index < $count; ++$index) {
@@ -1011,15 +1015,15 @@ function getExtendedFieldInfo($db, $table)
         }
         $f[$i]['size'] = get_attribut_size_from_type($f[$i]['type']);
         // remove size from type for readability in output
-        $f[$i]['type'] = str_replace('('.$f[$i]['size'].')', '', $f[$i]['type']);
+        $f[$i]['type'] = str_replace('('.$f[$i]['size'].')', '', (string) $f[$i]['type']);
         // look for attributes, everthing behind the first space is an atribut
         $attributes = explode(' ', $f[$i]['type'], 2);
         if (isset($attributes[1])) {
             // we found attributes
             unset($attributes[0]); // delete type
-            $f[$i]['attributes'] = trim(implode(' ', $attributes)); //merge all other attributes
+            $f[$i]['attributes'] = trim((string) implode(' ', $attributes)); //merge all other attributes
             // remove attributes from type
-            $f[$i]['type'] = trim(str_replace($f[$i]['attributes'], '', $f[$i]['type']));
+            $f[$i]['type'] = trim((string) str_replace($f[$i]['attributes'], '', $f[$i]['type']));
         }
         if (isset($row['NULL'])) {
             $f[$i]['null'] = $row['NULL'];
@@ -1046,9 +1050,9 @@ function getExtendedFieldInfo($db, $table)
     $res = mod_query($sql);
     while ($row = mysqli_fetch_array($res, MYSQLI_ASSOC)) {
         //echo "<br>Keys of $table: ";v($row);
-        $key_name = isset($row['Key_name']) ? $row['Key_name'] : '';
-        $index_type = isset($row['Index_type']) ? $row['Index_type'] : '';
-        $column_name = isset($row['Column_name']) ? $row['Column_name'] : '';
+        $key_name = $row['Key_name'] ?? '';
+        $index_type = $row['Index_type'] ?? '';
+        $column_name = $row['Column_name'] ?? '';
         // to do: add other info about index etc.
         if ('PRIMARY' == $key_name) {
             $f['primary_keys'][] = $column_name;
@@ -1109,11 +1113,12 @@ function build_where_from_record($data)
             $val = str_replace('<span class="treffer">', '', $val);
             $val = str_replace('</span>', '', $val);
         }
-        $nLen = strlen($val);
+        $nLen = strlen($val ?? '');
         if (!empty($val) && ($nLen < 200)) {
-            $ret .= '`'.$key.'`="'.addslashes($val).'" AND ';
+            $ret .= '`'.$key.'`="'.addslashes((string) $val).'" AND ';
         }
     }
+
     $ret = substr($ret, 0, -5);
 
     return $ret;
@@ -1173,12 +1178,12 @@ function setNewPrimaryKeys($db, $table, $newKeys, $indexSizes)
     $sqlSetNewPrimaryKeys = 'ALTER TABLE `'.$db.'`.`'.$table.'`';
     //wenn es Primaerschluessel gibt, diese loeschen
     $existingKeys = getPrimaryKeys($db, $table);
-    if (count($existingKeys) > 0) {
+    if ((is_countable($existingKeys) ? count($existingKeys) : 0) > 0) {
         $sqlSetNewPrimaryKeys .= ' DROP PRIMARY KEY';
     }
     //wenn min. 1 Schluessel im Array, sonst nur loeschen
-    if (count($newKeys) > 0) {
-        if (count($existingKeys) > 0) {
+    if ((is_countable($newKeys) ? count($newKeys) : 0) > 0) {
+        if ((is_countable($existingKeys) ? count($existingKeys) : 0) > 0) {
             $sqlSetNewPrimaryKeys .= ', ';
         }
         $sqlSetNewPrimaryKeys .= ' ADD PRIMARY KEY (';
@@ -1249,7 +1254,7 @@ function get_attribut_size_from_type($type)
     $size = '';
     $matches = [];
     $pattern = '/\((\d.*?)\)/msi';
-    preg_match($pattern, $type, $matches);
+    preg_match($pattern, (string) $type, $matches);
     if (isset($matches[1])) {
         $size = $matches[1];
     }
@@ -1261,7 +1266,7 @@ function get_attribut_size_from_type($type)
 function build_recordkey($data)
 {
     if (!is_array($data)) {
-        return urlencode($data);
+        return urlencode((string) $data);
     } else {
         return urlencode(serialize($data));
     }

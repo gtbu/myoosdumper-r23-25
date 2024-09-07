@@ -41,7 +41,7 @@
 
 			&nbsp;&nbsp;<a href="{PARAMS}&amp;readfile=1">{ICON_UPLOAD}</a>
 			&nbsp;&nbsp;<a href="{PARAMS}&amp;search=1">{ICON_SEARCH}</a>
-			&nbsp;&nbsp;<a href="{MYSQL_REF}" title="{MYSQL_HELP}" target="_blank">{ICON_MYSQL_HELP}</a>
+			&nbsp;&nbsp;<a href="{MYSQL_REF}" title="{MYSQL_HELP}" target="_blank" rel="noopener">{ICON_MYSQL_HELP}</a>
 		</div>
 
 		<div>

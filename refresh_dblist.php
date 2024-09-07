@@ -1,20 +1,22 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 /**
  * configurations to update.
@@ -28,8 +30,8 @@ $configurationfiles = [
 
 define('OOS_VALID_MOD', true);
 
-define('APPLICATION_PATH', '/' == dirname(__FILE__) ? '' : dirname(__FILE__));
-include_once APPLICATION_PATH.'/inc/functions.php';
+define('APPLICATION_PATH', '/' == __DIR__ ? '' : __DIR__);
+require_once APPLICATION_PATH.'/inc/functions.php';
 
 $config['language'] = 'en';
 $config['theme'] = 'mod';

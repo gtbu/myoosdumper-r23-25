@@ -23,7 +23,7 @@
 <!-- BEGIN CHANGED_LANGUAGE -->
 	<script>self.location.href='menu.php';</script>
 <!-- END CHANGED_LANGUAGE -->
-<a href="{CONFIG_HOMEPAGE}" target="_blank" title="{L_VISIT_HOMEPAGE} {CONFIG_HOMEPAGE}"><img src="css/{CONFIG_THEME}/pics/h1_logo.gif" alt="MyOOS [Dumper] - Homepage"></a>
+<a href="{CONFIG_HOMEPAGE}" target="_blank" rel="noopener" title="{L_VISIT_HOMEPAGE} {CONFIG_HOMEPAGE}"><img src="css/{CONFIG_THEME}/pics/h1_logo.gif" alt="MyOOS [Dumper] - Homepage"></a>
 <div id="version">
 	<a href="main.php" title="{L_HOME}" target="MyOOS_Dumper_content" style="text-decoration: none">
 		<span class="version-line">Version {MOD_VERSION}</span>

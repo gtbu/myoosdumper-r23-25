@@ -1,11 +1,8 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<meta charset="utf-8" />
-	<meta name="robots" content="noindex,nofollow" />
-	<meta http-equiv="X-UA-Compatible" content="IE=Edge">
-	<meta http-equiv="pragma" content="no-cache">
-	<meta http-equiv="expires" content="0">
+	<meta charset="utf-8">
+	<meta name="robots" content="noindex,nofollow">
 	<meta http-equiv="cache-control" content="must-revalidate">
 	<title>MyOOS [Dumper]</title>
 	<link rel="stylesheet" type="text/css" href="css/{THEME}/style.css">
@@ -70,7 +67,7 @@
 		<table>
 			<tr>
 				<td>
-					<input class="radio" type="radio" name="type" id="type4" value="4"{INPUT.TYPE4_CHECKED}>
+					<input class="radio-custom" type="radio" name="type" id="type4" value="4"{INPUT.TYPE4_CHECKED}>
 				</td>
 				<td>
 					<label for="type4">{L_HTACC_BCRYPT}</label>
@@ -78,7 +75,7 @@
 			</tr>
 			<tr>
 				<td>
-					<input class="radio" type="radio" name="type" id="type1" value="1"{INPUT.TYPE1_CHECKED}>
+					<input class="radio-custom" type="radio" name="type" id="type1" value="1"{INPUT.TYPE1_CHECKED}>
 				</td>
 				<td>
 					<label for="type1">{L_HTACC_MD5}</label>
@@ -86,7 +83,7 @@
 			</tr>
 			<tr>
 				<td>
-					<input class="radio" type="radio" name="type" id="type3" value="3"{INPUT.TYPE3_CHECKED}>
+					<input class="radio-custom" type="radio" name="type" id="type3" value="3"{INPUT.TYPE3_CHECKED}>
 				</td>
 				<td>
 					<label for="type3">{L_HTACC_SHA1}</label>
@@ -94,7 +91,7 @@
 			</tr>
 			<tr>
 				<td>
-					<input class="radio" type="radio" name="type" id="type0" value="0"{INPUT.TYPE0_CHECKED}>
+					<input class="radio-custom" type="radio" name="type" id="type0" value="0"{INPUT.TYPE0_CHECKED}>
 				</td>
 				<td>
 					<label for="type0">{L_HTACC_CRYPT}</label>
@@ -102,7 +99,7 @@
 			</tr>
 			<tr>
 				<td>
-					<input class="radio" type="radio" name="type" id="type2" value="2"{INPUT.TYPE2_CHECKED}>
+					<input class="radio-custom" type="radio" name="type" id="type2" value="2"{INPUT.TYPE2_CHECKED}>
 				</td>
 				<td>
 					<label for="type2">{L_HTACC_NO_ENCRYPTION}</label>

@@ -32,7 +32,7 @@
 <!-- END HTACCESS_DOESNT_EXISTS -->
 
 <h6>{L_VERSIONSINFORMATIONEN}</h6>
-<img src="css/{THEME}/pics/loveyourdata.gif" align="right" alt="love your data" title="love your data">
+<img src="css/{THEME}/pics/loveyourdata.png" align="right" alt="love your data" title="love your data">
 {L_MOD_VERSION}: <strong>{MOD_VERSION}</strong><br>
 
 <!-- BEGIN UPDATE_INFO -->
@@ -70,5 +70,5 @@
 
 <!-- BEGIN LAST_BACKUP -->
 	{L_LASTBACKUP} {L_VOM} <strong><span class="small">{LAST_BACKUP.LAST_BACKUP_INFO}</span></strong><br>
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{LAST_BACKUP.LAST_BACKUP_LINK}" target="_blank"><strong>{LAST_BACKUP.LAST_BACKUP_NAME}</strong></a><br>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{LAST_BACKUP.LAST_BACKUP_LINK}" target="_blank" rel="noopener"><strong>{LAST_BACKUP.LAST_BACKUP_NAME}</strong></a><br>
 <!-- END LAST_BACKUP -->

@@ -1,24 +1,30 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+if (function_exists('ini_set')) {
+    ini_set("display_errors", 1);
+}
 
-$mod_path = realpath(dirname(__FILE__).'/../').'/';
+
+$mod_path = realpath(__DIR__.'/../').'/';
 if (!defined('MOD_PATH')) {
     define('MOD_PATH', $mod_path);
 }
@@ -33,11 +39,17 @@ if (!defined('MOD_VERSION')) {
 }
 
 use League\Flysystem\Filesystem;
-use League\Flysystem\PhpseclibV2\SftpAdapter;
-use League\Flysystem\PhpseclibV2\SftpConnectionProvider;
+use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
+use League\Flysystem\PhpseclibV3\SftpAdapter;
 use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
 
-$autoloader = require_once './vendor/autoload.php';
+//Import PHPMailer classes into the global namespace
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+//Load Composer's autoloader
+$autoloader = include_once MOD_PATH .'vendor/autoload.php';
 
 // places all Page Parameters in hidden-fields (needed fpr backup and restore in PHP)
 function get_page_parameter($parameter, $ziel = 'dump')
@@ -58,12 +70,12 @@ function get_page_parameter($parameter, $ziel = 'dump')
 
 function mu_sort($array, $key_sort)
 {
-    $key_sorta = explode(',', $key_sort);
+    $key_sorta = explode(',', (string) $key_sort);
     $keys = array_keys($array[0]);
     $n = 0;
 
     for ($m = 0; $m < count($key_sorta); ++$m) {
-        $nkeys[$m] = trim($key_sorta[$m]);
+        $nkeys[$m] = trim((string) $key_sorta[$m]);
     }
     $n += count($key_sorta);
 
@@ -73,7 +85,7 @@ function mu_sort($array, $key_sort)
             $n += '1';
         }
     }
-    for ($u = 0; $u < count($array); ++$u) {
+    for ($u = 0; $u < (is_countable($array) ? count($array) : 0); ++$u) {
         $arr = $array[$u];
         for ($s = 0; $s < count($nkeys); ++$s) {
             $k = $nkeys[$s];
@@ -92,7 +104,7 @@ function FillMultiDBArrays()
     global $config, $databases;
 
     // Nur füllen wenn überhaupt Datenbanken gefunden wurden
-    if ((isset($databases['Name'])) && (count($databases['Name']) > 0)) {
+    if ((isset($databases['Name'])) && ((is_countable($databases['Name']) ? count($databases['Name']) : 0) > 0)) {
         $databases['multi'] = [];
         $databases['multi_praefix'] = [];
         if (!isset($databases['db_selected_index'])) {
@@ -105,30 +117,30 @@ function FillMultiDBArrays()
             $databases['multisetting'] = '';
         }
 
-        //		if($config['multi_dump'] ==1)
-        //		{
+        //        if($config['multi_dump'] ==1)
+        //        {
         if ('' == $databases['multisetting']) {
             //$databases['multi'][0] = $databases['db_actual'];
-        //$databases['multi_praefix'][0] =(isset($databases['praefix'][0])) ? $databases['praefix'][0] : '';
+            //$databases['multi_praefix'][0] =(isset($databases['praefix'][0])) ? $databases['praefix'][0] : '';
         } else {
-            $databases['multi'] = explode(';', $databases['multisetting']);
+            $databases['multi'] = explode(';', (string) $databases['multisetting']);
             $flipped = array_flip($databases['Name']);
-            for ($i = 0; $i < count($databases['multi']); ++$i) {
+            for ($i = 0; $i < (is_countable($databases['multi']) ? count($databases['multi']) : 0); ++$i) {
                 if (isset($flipped[$databases['multi'][$i]])) {
                     $ind = $flipped[$databases['multi'][$i]];
-                    $databases['multi_praefix'][$i] = (isset($databases['praefix'][$ind])) ? $databases['praefix'][$ind] : '';
+                    $databases['multi_praefix'][$i] = $databases['praefix'][$ind] ?? '';
                 }
             }
         }
 
-        //		}
-    /*
+        //        }
+        /*
         else
         {
             $databases['multi'][0] =(isset($databases['db_actual'])) ? $databases['db_actual'] : '';
             $databases['multi_praefix'][0] =(isset($databases['praefix'])) ? $databases['praefix'][$databases['db_selected_index']] : '';
         }
-*/
+        */
     }
 }
 
@@ -159,8 +171,8 @@ function DBDetailInfo($index)
 
 function Stringformat($s, $count)
 {
-    if ($count >= strlen($s)) {
-        return str_repeat('0', $count - strlen($s)).$s;
+    if ($count >= strlen($s ?? '')) {
+        return str_repeat('0', $count - strlen($s ?? '')).$s;
     } else {
         return $s;
     }
@@ -168,20 +180,20 @@ function Stringformat($s, $count)
 
 function getmicrotime()
 {
-    list($usec, $sec) = explode(' ', microtime());
+    [$usec, $sec] = explode(' ', microtime());
     return (float) $usec + (float) $sec;
 }
 
 function MD_FreeDiskSpace()
 {
     global $lang;
-    $dfs = @diskfreespace('../');
+    $dfs = disk_free_space('../');
     return ($dfs) ? byte_output($dfs) : $lang['L_NOTAVAIL'];
 }
 
 function WriteDynamicText($txt, $object)
 {
-    return '<script>WP("'.addslashes($txt).','.$object.'");</script>';
+    return '<script>WP("'.addslashes((string) $txt).','.$object.'");</script>';
 }
 
 function byte_output($bytes, $precision = 2, $names = [])
@@ -192,42 +204,23 @@ function byte_output($bytes, $precision = 2, $names = [])
     for ($level = 0; $bytes >= 1024; ++$level) {
         $bytes /= 1024;
     }
-    switch ($level) {
-        case 0:
-            $suffix = (isset($names[0])) ? $names[0] : '<span class="explain" title="Bytes">B</span>';
-            break;
-        case 1:
-            $suffix = (isset($names[1])) ? $names[1] : '<span class="explain" title="KiloBytes">KB</span>';
-            break;
-        case 2:
-            $suffix = (isset($names[2])) ? $names[2] : '<span class="explain" title="MegaBytes">MB</span>';
-            break;
-        case 3:
-            $suffix = (isset($names[3])) ? $names[3] : '<span class="explain" title="GigaBytes">GB</span>';
-            break;
-        case 4:
-            $suffix = (isset($names[4])) ? $names[4] : '<span class="explain" title="TeraBytes">TB</span>';
-            break;
-        case 5:
-            $suffix = (isset($names[4])) ? $names[4] : '<span class="explain" title="PetaBytes">PB</span>';
-            break;
-        case 6:
-            $suffix = (isset($names[4])) ? $names[4] : '<span class="explain" title="ExaBytes">EB</span>';
-            break;
-        case 7:
-            $suffix = (isset($names[4])) ? $names[4] : '<span class="explain" title="YottaBytes">ZB</span>';
-            break;
-
-        default:
-            $suffix = (isset($names[$level])) ? $names[$level] : '';
-            break;
-    }
+    $suffix = match ($level) {
+        0 => $names[0] ?? '<span class="explain" title="Bytes">B</span>',
+        1 => $names[1] ?? '<span class="explain" title="KiloBytes">KB</span>',
+        2 => $names[2] ?? '<span class="explain" title="MegaBytes">MB</span>',
+        3 => $names[3] ?? '<span class="explain" title="GigaBytes">GB</span>',
+        4 => $names[4] ?? '<span class="explain" title="TeraBytes">TB</span>',
+        5 => $names[4] ?? '<span class="explain" title="PetaBytes">PB</span>',
+        6 => $names[4] ?? '<span class="explain" title="ExaBytes">EB</span>',
+        7 => $names[4] ?? '<span class="explain" title="YottaBytes">ZB</span>',
+        default => $names[$level] ?? '',
+    };
     return sprintf('%01.'.$precision.'f', round($bytes, $precision)).' '.$suffix;
 }
 
 function ExtractDBname($s)
 {
-    $sp = explode('_', $s);
+    $sp = explode('_', (string) $s);
     $anz = count($sp) - 1;
     $r = 0;
     if ($anz > 4) {
@@ -242,28 +235,28 @@ function ExtractDBname($s)
         for ($i = 0; $i <= $anz; ++$i) {
             $r += strlen($sp[$i]) + 1;
         }
-        return substr($s, 0, $r - 1);
+        return substr((string) $s, 0, $r - 1);
     } else {
         //Fremdformat
-        return substr($s, 0, strpos($s, '.'));
+        return substr((string) $s, 0, strpos((string) $s, '.'));
     }
 }
 
 function ExtractBUT($s)
 {
-    $i = strpos(strtolower($s), 'part');
+    $i = strpos(strtolower((string) $s), 'part');
     if ($i > 0) {
-        $s = substr($s, 0, $i - 1);
+        $s = substr((string) $s, 0, $i - 1);
     }
-    $i = strpos(strtolower($s), 'crondump');
+    $i = strpos(strtolower((string) $s), 'crondump');
     if ($i > 0) {
-        $s = substr($s, 0, $i - 1);
+        $s = substr((string) $s, 0, $i - 1);
     }
-    $i = strpos(strtolower($s), '.sql');
+    $i = strpos(strtolower((string) $s), '.sql');
     if ($i > 0) {
-        $s = substr($s, 0, $i);
+        $s = substr((string) $s, 0, $i);
     }
-    $sp = explode('_', $s);
+    $sp = explode('_', (string) $s);
 
     $anz = count($sp) - 1;
     if ('perl' == strtolower($sp[$anz])) {
@@ -280,12 +273,12 @@ function ExtractBUT($s)
 function WriteLog($aktion)
 {
     global $config, $lang;
-    $log = date('d.m.Y H:i:s').' '.htmlspecialchars($aktion)."\n";
+    $log = date('d.m.Y H:i:s').' '.htmlspecialchars((string) $aktion)."\n";
 
     $logfile = (isset($config['logcompression']) && (1 == $config['logcompression'])) ? $config['files']['log'].'.gz' : $config['files']['log'];
-    $config['log_maxsize'] = isset($config['log_maxsize']) ? $config['log_maxsize'] : 0;
+    $config['log_maxsize'] ??= 0;
 
-    if (@filesize($logfile) + strlen($log) > $config['log_maxsize']) {
+    if (@filesize($logfile) + strlen($log ?? '') > $config['log_maxsize']) {
         @unlink($logfile);
     }
 
@@ -315,8 +308,8 @@ function ErrorLog($dest, $db, $sql, $error, $art = 1)
     //$art=1 -> Hinweis
 
     global $config;
-    if (strlen($sql) > 100) {
-        $sql = substr($sql, 0, 100).' ... (snip)';
+    if (strlen($sql ?? '') > 100) {
+        $sql = substr((string) $sql, 0, 100).' ... (snip)';
     }
     //Error-Zeile generieren
     $errormsg = date('d.m.Y H:i:s').':  ';
@@ -414,7 +407,7 @@ function SetFileRechte($file, $is_dir = 1, $perm = 0777)
     global $lang;
     $ret = true;
     if (1 == $is_dir) {
-        if ('/' != substr($file, -1)) {
+        if (!str_ends_with((string) $file, '/')) {
             $file .= '/';
         }
     }
@@ -479,7 +472,7 @@ function EmptyDB($dbn)
     @mysqli_query($config['dbconnection'], 'SET FOREIGN_KEY_CHECKS=0');
     $res = mysqli_query($config['dbconnection'], 'SHOW TABLE STATUS FROM `'.$dbn.'`') or exit('EmptyDB: '.mysqli_error($config['dbconnection']));
     while ($row = mysqli_fetch_array($res, MYSQLI_ASSOC)) {
-        if ('VIEW' == substr(strtoupper($row['Comment']), 0, 4)) {
+        if (str_starts_with(strtoupper((string) $row['Comment']), 'VIEW')) {
             $t_sql[] = 'DROP VIEW `'.$dbn.'`.`'.$row['Name'].'`';
         } else {
             $t_sql[] = 'DROP TABLE `'.$dbn.'`.`'.$row['Name'].'`';
@@ -503,7 +496,7 @@ function AutoDelete()
     if ('' == $databases['multisetting']) {
         $available[0] = $databases['db_actual'];
     } else {
-        $available = explode(';', $databases['multisetting']);
+        $available = explode(';', (string) $databases['multisetting']);
     }
 
     $out = '';
@@ -517,12 +510,12 @@ function AutoDelete()
         while (false !== ($filename = readdir($dh))) {
             if ('.' != $filename && '..' != $filename && !is_dir($config['paths']['backup'].$filename)) {
                 foreach ($available as $item) {
-                    $pos = strpos($filename, $item);
+                    $pos = strpos($filename, (string) $item);
                     if ($pos === false) {
                         // Der Datenbankname wurde nicht in der Konfiguration gefunden;
                     } else {
                         //statuszeile auslesen
-                        if ('gz' == substr($filename, -2)) {
+                        if (str_ends_with($filename, 'gz')) {
                             $fp = gzopen($config['paths']['backup'].$filename, 'r');
                             $sline = gzgets($fp, 40960);
                             gzclose($fp);
@@ -537,7 +530,7 @@ function AutoDelete()
                             $eintraege = (-1 == $statusline['records']) ? '' : $statusline['records'];
                             $part = ('MP_0' == $statusline['part'] || $statusline['part'] = '') ? 0 : substr($statusline['part'], 3);
                             $db_name = $statusline['dbname'];
-                            $datum = substr($filename, strlen($db_name) + 1);
+                            $datum = substr($filename, strlen($db_name ?? '') + 1);
                             $timestamp = substr($datum, 0, 16);
                             if (!isset($files[$db_name])) {
                                 $files[$db_name] = [];
@@ -585,7 +578,7 @@ function AutoDelete()
 function DeleteFile($files, $function = 'max')
 {
     global $config, $lang;
-    $delfile = explode('|', $files);
+    $delfile = explode('|', (string) $files);
     $r = '<p class="error">'.$lang['L_FM_AUTODEL1'].'<br>';
     $r .= $delfile[3].'<br>';
     $part = $delfile[2];
@@ -613,7 +606,7 @@ function ReadStatusline($line)
     */
     global $lang;
     $statusline = [];
-    if (('# Status' != substr($line, 0, 8) && '-- Status' != substr($line, 0, 9)) || '-- StatusC' == substr($line, 0, 10)) {
+    if ((!str_starts_with((string) $line, '# Status') && !str_starts_with((string) $line, '-- Status')) || str_starts_with((string) $line, '-- StatusC')) {
         //Fremdfile
         $statusline['tables'] = -1;
         $statusline['records'] = -1;
@@ -629,7 +622,7 @@ function ReadStatusline($line)
         $statusline['charset'] = '?';
     } else {
         // MySQLDumper-File - Informationen extrahieren
-        $s = explode(':', $line);
+        $s = explode(':', (string) $line);
         if (count($s) < 12) {
             //fehlenden Elemente auffüllen
             $c = count($s);
@@ -649,7 +642,7 @@ function ReadStatusline($line)
         $statusline['flags'] = $s[9];
         $statusline['sqlbefore'] = $s[10];
         $statusline['sqlafter'] = $s[11];
-        if ((isset($s[12])) && 'EXTINFO' != trim($s[12])) {
+        if ((isset($s[12])) && 'EXTINFO' != trim((string) $s[12])) {
             $statusline['charset'] = $s[12];
         } else {
             $statusline['charset'] = '?';
@@ -657,7 +650,7 @@ function ReadStatusline($line)
     }
 
     //flags zerlegen
-    if (strlen($statusline['flags']) < 6) {
+    if (strlen($statusline['flags'] ?? '') < 6) {
         $statusline['flags'] = '2222222';
     }
     $statusline['complete_inserts'] = substr($statusline['flags'], 0, 1);
@@ -672,10 +665,10 @@ function ReadStatusline($line)
 
 function NextPart($s, $first = 0, $keep_suffix = false)
 {
-    $nf = explode('_', $s);
+    $nf = explode('_', (string) $s);
     $i = array_search('part', $nf) + 1;
     $p = substr($nf[$i], 0, strpos($nf[$i], '.'));
-    $ext = substr($nf[$i], strlen($p));
+    $ext = substr($nf[$i], strlen($p ?? ''));
     if (1 == $first) {
         $nf[$i] = '1'.$ext;
     } else {
@@ -803,33 +796,37 @@ function TesteSFTP($i)
     if (1 == $pass) {
         $s = $lang['L_CONNECT_TO'].' `'.$config['sftp_server'][$i].'` Port '.$config['sftp_port'][$i];
 
-        // https://flysystem.thephpleague.com/v2/docs/adapter/sftp/
-        $filesystem = new Filesystem(new SftpAdapter(
-            new SftpConnectionProvider(
-                $config['sftp_server'][$i], // host (required)
-                $config['sftp_user'][$i], // username (required)
-                $config['sftp_pass'][$i], // password (optional, default: null) set to null if privateKey is used
-                $config['sftp_path_to_private_key'][$i], // '/path/to/my/private_key', private key (optional, default: null) can be used instead of password, set to null if password is set
-                $config['sftp_secret_passphrase_for_private_key'][$i], // 'my-super-secret-passphrase-for-the-private-key', passphrase (optional, default: null), set to null if privateKey is not used or has no passphrase
-                $config['sftp_port'][$i], // port (optional, default: 22)
-                false, // use agent (optional, default: false)
-                intval($config['sftp_timeout'][$i]), // timeout (optional, default: 10)
-                4, // max tries (optional, default: 4)
-                $config['sftp_fingerprint'][$i], // 'fingerprint-string', host fingerprint (optional, default: null),
-                null // connectivity checker (must be an implementation of 'League\Flysystem\PhpseclibV2\ConnectivityChecker' to check if a connection can be established (optional, omit if you don't need some special handling for setting reliable connections)
-            ),
-            $config['sftp_dir'][$i], // root path (required)
-            PortableVisibilityConverter::fromArray([
-                'file' => [
+        // https://flysystem.thephpleague.com/docs/adapter/sftp-v3/
+        $filesystem = new Filesystem(
+            new SftpAdapter(
+                new SftpConnectionProvider(
+                    $config['sftp_server'][$i], // host (required)
+                    $config['sftp_user'][$i], // username (required)
+                    $config['sftp_pass'][$i], // password (optional, default: null) set to null if privateKey is used
+                    $config['sftp_path_to_private_key'][$i], // '/path/to/my/private_key', private key (optional, default: null) can be used instead of password, set to null if password is set
+                    $config['sftp_secret_passphrase_for_private_key'][$i], // 'my-super-secret-passphrase-for-the-private-key', passphrase (optional, default: null), set to null if privateKey is not used or has no passphrase
+                    $config['sftp_port'][$i], // port (optional, default: 22)
+                    false, // use agent (optional, default: false)
+                    intval($config['sftp_timeout'][$i]), // timeout (optional, default: 10)
+                    4, // max tries (optional, default: 4)
+                    $config['sftp_fingerprint'][$i], // 'fingerprint-string', host fingerprint (optional, default: null),
+                    null // connectivity checker (must be an implementation of 'League\Flysystem\PhpseclibV2\ConnectivityChecker' to check if a connection can be established (optional, omit if you don't need some special handling for setting reliable connections)
+                ),
+                $config['sftp_dir'][$i], // root path (required)
+                PortableVisibilityConverter::fromArray(
+                    [
+                    'file' => [
                     'public' => 0640,
                     'private' => 0604,
-                ],
-                'dir' => [
+                    ],
+                    'dir' => [
                     'public' => 0740,
                     'private' => 7604,
-                ],
-            ])
-        ));
+                    ],
+                    ]
+                )
+            )
+        );
 
         $path = 'path_'.time().'.txt';
 
@@ -838,7 +835,7 @@ function TesteSFTP($i)
         } catch (Exception $e) {
             // handle the error
             echo 'Exception: ',  $e->getMessage(), "\n";
-            $s .= '<br><span class="error">'.$lang['L_CONN_NOT_POSSIBLE'].'</span>';
+            $s .= '<br><span class="error">'.($lang['L_CONN_NOT_POSSIBLE'] ?? '').'</span>';
             $pass = 2;
         }
 
@@ -849,14 +846,14 @@ function TesteSFTP($i)
         } catch (Exception $e) {
             // handle the error
             echo 'Exception: ',  $e->getMessage(), "\n";
-            $s .= '<br><span class="error">'.$lang['L_CHANGEDIRERROR'].'</span>';
+            $s .= '<br><span class="error">'.($lang['L_CHANGEDIRERROR'] ?? '').'</span>';
             $pass = 2;
         }
 
         if (1 == $pass) {
-            $s .= ' <span class="success">'.$lang['L_OK'].'</span>';
-            $s .= '<br><strong>Login ok</strong><br>'.$lang['L_CHANGEDIR'].' `'.$config['sftp_dir'][$i].'` ';
-            $s .= '<br><strong>'.$lang['L_SFTP_OK'].'</strong>';
+            $s .= ' <span class="success">'.($lang['L_OK'] ?? '').'</span>';
+            $s .= '<br><strong>Login ok</strong><br>'.($lang['L_CHANGEDIR'] ?? '').' `'.$config['sftp_dir'][$i].'` ';
+            $s .= '<br><strong>'.($lang['L_SFTP_OK'] ?? '').'</strong>';
         }
     }
 
@@ -888,9 +885,10 @@ function SendViaSFTP($i, $source_file, $conn_msg = 1)
     }
 
     // https://flysystem.thephpleague.com/v2/docs/adapter/sftp/
-    $filesystem = new Filesystem(new SftpAdapter(
-        new SftpConnectionProvider(
-            $config['sftp_server'][$i], // host (required)
+    $filesystem = new Filesystem(
+        new SftpAdapter(
+            new SftpConnectionProvider(
+                $config['sftp_server'][$i], // host (required)
                 $config['sftp_user'][$i], // username (required)
                 $config['sftp_pass'][$i], // password (optional, default: null) set to null if privateKey is used
                 $config['sftp_path_to_private_key'][$i], // '/path/to/my/private_key', private key (optional, default: null) can be used instead of password, set to null if password is set
@@ -901,19 +899,22 @@ function SendViaSFTP($i, $source_file, $conn_msg = 1)
                 4, // max tries (optional, default: 4)
                 $config['sftp_fingerprint'][$i], // 'fingerprint-string', host fingerprint (optional, default: null),
                 null // connectivity checker (must be an implementation of 'League\Flysystem\PhpseclibV2\ConnectivityChecker' to check if a connection can be established (optional, omit if you don't need some special handling for setting reliable connections)
-        ),
-        $config['sftp_dir'][$i], // root path (required)
-        PortableVisibilityConverter::fromArray([
-            'file' => [
+            ),
+            $config['sftp_dir'][$i], // root path (required)
+            PortableVisibilityConverter::fromArray(
+                [
+                'file' => [
                 'public' => 0640,
                 'private' => 0604,
-            ],
-            'dir' => [
+                ],
+                'dir' => [
                 'public' => 0740,
                 'private' => 7604,
-            ],
-        ])
-    ));
+                ],
+                ]
+            )
+        )
+    );
 
     // Upload the file
     $path = $source_file;
@@ -926,26 +927,26 @@ function SendViaSFTP($i, $source_file, $conn_msg = 1)
     } catch (Exception $e) {
         // handle the error
         $out .= '<br>Exception: ' .  $e->getMessage();
-        $out .= '<br><span class="error">'.$lang['L_CONN_NOT_POSSIBLE'].'</span>';
+        $out .= '<br><span class="error">'.($lang['L_CONN_NOT_POSSIBLE'] ?? '').'</span>';
         $pass = 3;
     }
 
     // Check upload status
     if (3 == $pass) {
-        $out .= '<span class="error">'.$lang['L_FTPCONNERROR3']."<br>($source -> $path)</span><br>";
+        $out .= '<span class="error">'.($lang['L_FTPCONNERROR3'] ?? '')."<br>($source -> $path)</span><br>";
     } else {
-        $out .= '<span class="success">'.$lang['L_FILE'].' <a href="'.$config['paths']['backup'].$source_file.'" class="smallblack">'.$source_file.'</a>'.$lang['L_FTPCONNECTED2'].$config['sftp_server'][$i].$lang['L_FTPCONNECTED3'].'</span><br>';
+        $out .= '<span class="success">'.($lang['L_FILE'] ?? '').' <a href="'.$config['paths']['backup'].$source_file.'" class="smallblack">'.$source_file.'</a>'.$lang['L_FTPCONNECTED2'].$config['sftp_server'][$i].$lang['L_FTPCONNECTED3'].'</span><br>';
         WriteLog("'$source_file' sent via sFTP.");
     }
 }
 
 function Realpfad($p)
 {
-    $dir = dirname(__FILE__);
+    $dir = __DIR__;
     $dir = str_replace('inc', '', $dir);
     $dir = str_replace('\\', '/', $dir);
     $dir = str_replace('//', '/', $dir);
-    if ('/' != substr($dir, -1)) {
+    if (!str_ends_with($dir, '/')) {
         $dir .= '/';
     }
     return $dir;
@@ -956,13 +957,13 @@ function get_config_filelist()
 {
     global $config;
     $default = $config['config_file'];
-    $filters = array('..', '.');
+    $filters = ['..', '.'];
     $directory = $config['paths']['config'];
     $dirs = array_diff(scandir($directory), $filters);
     $r = '';
     foreach ($dirs as $filename) {
-        if (!is_dir($config['paths']['config'].$filename) && '.conf.php' == substr($filename, -9)) {
-            $f = substr($filename, 0, strlen($filename) - 9);
+        if (!is_dir($config['paths']['config'].$filename) && str_ends_with((string) $filename, '.conf.php')) {
+            $f = substr((string) $filename, 0, strlen($filename ?? '') - 9);
             $r .= '<option value="'.$f.'" ';
             if ($f == $default) {
                 $r .= ' selected';
@@ -980,7 +981,7 @@ function GetThemes()
     $dh = opendir($config['paths']['root'].'css/');
     $r = '';
     while (false !== ($filename = readdir($dh))) {
-        if ('.' != $filename && '..' != $filename && is_dir($config['paths']['root'].'css/'.$filename) && '.' != substr($filename, 0, 1) && '_' != substr($filename, 0, 1)) {
+        if ('.' != $filename && '..' != $filename && is_dir($config['paths']['root'].'css/'.$filename) && !str_starts_with($filename, '.') && !str_starts_with($filename, '_')) {
             $r .= '<option value="'.$filename.'" ';
             if ($filename == $default) {
                 $r .= ' selected';
@@ -1045,7 +1046,7 @@ function headline($title, $mainframe = 1)
     $s = '';
     if ((isset($config['interface_server_caption'])) && (1 == $config['interface_server_caption'])) {
         if ($config['interface_server_caption_position'] == $mainframe) {
-            $s .= '<div id="server'.$mainframe.'">'.$lang['L_SERVER'].': <a class="server" href="'.getServerProtocol().$_SERVER['SERVER_NAME'].'" target="_blank" title="'.$_SERVER['SERVER_NAME'].'">'.$_SERVER['SERVER_NAME'].'</a></div>';
+            $s .= '<div id="server'.$mainframe.'">'.$lang['L_SERVER'].': <a class="server" href="'.getServerProtocol().$_SERVER['SERVER_NAME'].'" target="_blank" rel="noopener" title="'.$_SERVER['SERVER_NAME'].'">'.$_SERVER['SERVER_NAME'].'</a></div>';
         }
     }
     if (1 == $mainframe) {
@@ -1081,11 +1082,8 @@ function MODHeader($kind = 0)
 
     //kind 0=main 1=menu
     $r = '<!DOCTYPE HTML>'."\n<html>\n<head>\n";
-    $r .= '<meta charset="utf-8" />'."\n";
-    $r .= '<meta name="robots" content="noindex,nofollow" />'."\n";
-    $r .= '<meta http-equiv="X-UA-Compatible" content="IE=Edge">'."\n";
-    $r .= '<meta http-equiv="pragma" content="no-cache">'."\n";
-    $r .= '<meta http-equiv="expires" content="0">'."\n";
+    $r .= '<meta charset="utf-8">'."\n";
+    $r .= '<meta name="robots" content="noindex,nofollow">'."\n";
     $r .= '<meta http-equiv="cache-control" content="must-revalidate">'."\n";
     $r .= '<title>MyOOS [Dumper]</title>'."\n";
     $r .= '<link rel="stylesheet" type="text/css" href="css/'.$config['theme'].'/style.css">'."\n";
@@ -1109,8 +1107,8 @@ function MODFooter($rfoot = '', $enddiv = 1)
 function save_bracket($str)
 {
     // Wenn Klammer zu am Ende steht, diese behalten
-    $str = trim($str);
-    if (')' == substr($str, -1)) {
+    $str = trim((string) $str);
+    if (str_ends_with($str, ')')) {
         $str = ')';
     } else {
         $str = '';
@@ -1120,7 +1118,7 @@ function save_bracket($str)
 
 function DownGrade($s, $show = true)
 {
-    $tmp = explode(',', $s);
+    $tmp = explode(',', (string) $s);
     //echo "<pre>";print_r($tmp);echo "</pre>";
 
     for ($i = 0; $i < count($tmp); ++$i) {
@@ -1129,7 +1127,7 @@ function DownGrade($s, $show = true)
         if (strpos($t, 'collate ')) {
             $tmp2 = explode(' ', $tmp[$i]);
             for ($j = 0; $j < count($tmp2); ++$j) {
-                if ('collate' == strtolower($tmp2[$j])) {
+                if ('collate' == strtolower((string) $tmp2[$j])) {
                     $tmp2[$j] = '';
                     $tmp2[$j + 1] = save_bracket($tmp2[$j + 1]);
                     ++$j;
@@ -1141,14 +1139,14 @@ function DownGrade($s, $show = true)
         if (strpos($t, 'engine=')) {
             $tmp2 = explode(' ', $tmp[$i]);
             for ($j = 0; $j < count($tmp2); ++$j) {
-                if ('ENGINE=' == substr(strtoupper($tmp2[$j]), 0, 7)) {
-                    $tmp2[$j] = 'TYPE='.substr($tmp2[$j], 7, strlen($tmp2[$j]) - 7);
+                if (str_starts_with(strtoupper((string) $tmp2[$j]), 'ENGINE=')) {
+                    $tmp2[$j] = 'TYPE='.substr((string) $tmp2[$j], 7, strlen($tmp2[$j] ?? '') - 7);
                 }
-                if ('CHARSET=' == substr(strtoupper($tmp2[$j]), 0, 8)) {
+                if (str_starts_with(strtoupper((string) $tmp2[$j]), 'CHARSET=')) {
                     $tmp2[$j] = '';
                     $tmp2[$j - 1] = save_bracket($tmp2[$j - 1]);
                 }
-                if ('COLLATE=' == substr(strtoupper($tmp2[$j]), 0, 8)) {
+                if (str_starts_with(strtoupper((string) $tmp2[$j]), 'COLLATE=')) {
                     $tmp2[$j] = save_bracket($tmp2[$j]);
                     $tmp2[$j - 1] = '';
                 }
@@ -1162,7 +1160,7 @@ function DownGrade($s, $show = true)
             $end = false;
 
             for ($j = 0; $j < count($tmp2); ++$j) {
-                if ('character' == strtolower($tmp2[$j])) {
+                if ('character' == strtolower((string) $tmp2[$j])) {
                     $tmp2[$j] = '';
                     $tmp2[$j + 1] = save_bracket($tmp2[$j + 1]);
                     $tmp2[$j + 2] = save_bracket($tmp2[$j + 2]);
@@ -1188,7 +1186,7 @@ function DownGrade($s, $show = true)
         }
     }
     $t = implode(',', $tmp);
-    if (';' != substr(rtrim($t), -1)) {
+    if (!str_ends_with(rtrim($t), ';')) {
         $t = rtrim($t).';';
     }
     return $t;
@@ -1197,9 +1195,9 @@ function DownGrade($s, $show = true)
 function MySQLi_Ticks($s)
 {
     $klammerstart = $lastklammerstart = $end = 0;
-    $inner_s_start = strpos($s, '(');
-    $inner_s_end = strrpos($s, ')');
-    $inner_s = substr($s, $inner_s_start + 1, $inner_s_end - (1 + $inner_s_start));
+    $inner_s_start = strpos((string) $s, '(');
+    $inner_s_end = strrpos((string) $s, ')');
+    $inner_s = substr((string) $s, $inner_s_start + 1, $inner_s_end - (1 + $inner_s_start));
     $pieces = explode(',', $inner_s);
     for ($i = 0; $i < count($pieces); ++$i) {
         $r = trim($pieces[$i]);
@@ -1207,11 +1205,11 @@ function MySQLi_Ticks($s)
         if ($i == count($pieces) - 1) {
             ++$klammerstart;
         }
-        if ('KEY ' == substr(strtoupper($r), 0, 4) || 'UNIQUE ' == substr(strtoupper($r), 0, 7) || 'PRIMARY KEY ' == substr(strtoupper($r), 0, 12) || 'FULLTEXT KEY ' == substr(strtoupper($r), 0, 13)) {
+        if (str_starts_with(strtoupper($r), 'KEY ') || str_starts_with(strtoupper($r), 'UNIQUE ') || str_starts_with(strtoupper($r), 'PRIMARY KEY ') || str_starts_with(strtoupper($r), 'FULLTEXT KEY ')) {
             //nur ein Key
             $end = 1;
         } else {
-            if ('`' != substr($r, 0, 1) && '\'' != substr($r, 0, 1) && 0 == $klammerstart && 0 == $end && 0 == $lastklammerstart) {
+            if (!str_starts_with($r, '`') && !str_starts_with($r, '\'') && 0 == $klammerstart && 0 == $end && 0 == $lastklammerstart) {
                 $pos = strpos($r, ' ');
                 $r = '`'.substr($r, 0, $pos).'`'.substr($r, $pos);
             }
@@ -1219,7 +1217,7 @@ function MySQLi_Ticks($s)
         $pieces[$i] = $r;
         $lastklammerstart = $klammerstart;
     }
-    $back = substr($s, 0, $inner_s_start + 1).implode(',', $pieces).');';
+    $back = substr((string) $s, 0, $inner_s_start + 1).implode(',', $pieces).');';
     return $back;
 }
 
@@ -1244,12 +1242,12 @@ function convert_to_utf8($obj)
         if (is_array($obj)) {
             foreach ($obj as $key => $val) {
                 //echo "<br> Wandle " . $val . " nach ";
-                $obj[$key] = utf8_encode($val);
+                $obj[$key] = mb_convert_encoding((string) $val, 'UTF-8', 'ISO-8859-1');
                 //echo $obj[$key];
             }
         }
         if (is_string($obj)) {
-            $obj = utf8_encode($obj);
+            $obj = mb_convert_encoding($obj, 'UTF-8', 'ISO-8859-1');
         }
         $ret = $obj;
     }
@@ -1272,11 +1270,11 @@ function convert_to_latin1($obj)
     if (false == $config['mysql_can_change_encoding'] && 'utf8' != $config['mysql_standard_character_set']) {
         if (is_array($obj)) {
             foreach ($obj as $key => $val) {
-                $obj[$key] = utf8_decode($val);
+                $obj[$key] = mb_convert_encoding((string) $val, 'ISO-8859-1');
             }
         }
         if (is_string($obj)) {
-            $obj = utf8_decode($obj);
+            $obj = mb_convert_encoding($obj, 'ISO-8859-1');
         }
         $ret = $obj;
     }
@@ -1288,7 +1286,7 @@ function get_index($arr, $selected)
 {
     $ret = false; // return false if not found
     foreach ($arr as $key => $val) {
-        if (strtolower(substr($val, 0, strlen($selected))) == strtolower($selected)) {
+        if (strtolower(substr((string) $val, 0, strlen($selected ?? ''))) == strtolower((string) $selected)) {
             $ret = $key;
             break;
         }
@@ -1313,7 +1311,7 @@ function read_config($file = false)
     // protect from including external files
     $search = [':', 'http', 'ftp', ' '];
     $replace = ['', '', '', ''];
-    $file = str_replace($search, $replace, $file);
+    $file = str_replace($search, $replace, (string) $file);
 
     if (is_readable($config['paths']['config'].$file.'.php')) {
         // to prevent modern server from caching the new configuration we need to evaluate it this way
@@ -1340,7 +1338,7 @@ function get_config_filenames()
     $configs = [];
     $dh = opendir($config['paths']['config'].'/');
     while (false !== ($filename = readdir($dh))) {
-        if ('.php' == substr($filename, -4) && '.conf.php' != substr($filename, -9) && 'dbs_manual.php' != $filename) {
+        if (str_ends_with($filename, '.php') && !str_ends_with($filename, '.conf.php') && 'dbs_manual.php' != $filename) {
             $configs[] = substr($filename, 0, -4);
         }
     }
@@ -1418,7 +1416,7 @@ function get_sql_encodings()
  */
 function stripslashes_deep($value)
 {
-    $value = is_array($value) ? array_map('stripslashes_deep', $value) : stripslashes($value);
+    $value = is_array($value) ? array_map('stripslashes_deep', $value) : stripslashes((string) $value);
     return $value;
 }
 
@@ -1431,7 +1429,7 @@ function stripslashes_deep($value)
  */
 function trim_deep($value)
 {
-    $value = is_array($value) ? array_map('trim_deep', $value) : trim($value);
+    $value = is_array($value) ? array_map('trim_deep', $value) : trim((string) $value);
     return $value;
 }
 
@@ -1472,7 +1470,7 @@ function fetchFileFromURL($url, $file, $local_file, $local_path = './data/')
  */
 function fetchFileDataFromURL($url)
 {
-    $url_parsed = parse_url($url);
+    $url_parsed = parse_url((string) $url);
     $in = '';
 
     $host = $url_parsed['host'];

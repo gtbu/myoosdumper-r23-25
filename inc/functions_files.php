@@ -1,20 +1,22 @@
 <?php
-/* ----------------------------------------------------------------------
+/**
+ * ---------------------------------------------------------------------
 
    MyOOS [Dumper]
-   http://www.oos-shop.de/
+   https://www.oos-shop.de/
 
-   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   Copyright (c) 2013 - 2024 by the MyOOS Development Team.
    ----------------------------------------------------------------------
    Based on:
 
    MySqlDumper
-   http://www.mysqldumper.de
+   https://www.mysqldumper.de
 
    Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
    ----------------------------------------------------------------------
    Released under the GNU General Public License
-   ---------------------------------------------------------------------- */
+   ----------------------------------------------------------------------
+ */
 
 if (!defined('MOD_VERSION')) {
     exit('No direct access.');
@@ -41,7 +43,7 @@ function FilelisteCombo($fpath, $selected)
 
 function sortierdatum($datum)
 {
-    $p = explode(' ', $datum);
+    $p = explode(' ', (string) $datum);
     $uhrzeit = $p[1];
     $p2 = explode('.', $p[0]);
     $day = $p2[0];
@@ -98,7 +100,7 @@ function FileList($multi = 0)
             //statuszeile auslesen
             $sline = '';
 
-            if ('.gz' == substr($files[$i]['name'], -3)) {
+            if (str_ends_with($files[$i]['name'], '.gz')) {
                 if ($config['zlib']) {
                     $fp = gzopen($fpath.$files[$i]['name'], 'r');
                     $sline = gzgets($fp, 40960);
@@ -217,23 +219,23 @@ function FileList($multi = 0)
                 $fl .= '<input type="hidden" name="multi" value="'.$multi.'">';
 
                 if (0 == $multi) {
-                    $fl .= '<input type="hidden" name="multipart[]" value="'.$db_backups[$i]['multipart'].'"><input name="file[]" type="radio" class="radio" value="'.$dbn.'" onClick="Check('.$checkindex++.',0);">';
+                    $fl .= '<input type="hidden" name="multipart[]" value="'.$db_backups[$i]['multipart'].'"><input name="file[]" type="radio" class="radio-custom" value="'.$dbn.'" onClick="Check('.$checkindex++.',0);">';
                 } else {
-                    $fl .= '<input type="hidden" name="multipart[]" value="'.$db_backups[$i]['multipart'].'"><input name="file[]" type="checkbox" class="checkbox" value="'.$dbn.'" onClick="Check('.$checkindex++.',1);">';
+                    $fl .= '<input type="hidden" name="multipart[]" value="'.$db_backups[$i]['multipart'].'"><input name="file[]" type="checkbox" class="checkbox-style" value="'.$dbn.'" onClick="Check('.$checkindex++.',1);">';
                 }
 
                 if (0 == $db_backups[$i]['multipart']) {
-                    $fl .= '&nbsp;<a href="'.$fpath.urlencode($dbn).'" title="Backupfile: '.$dbn.'" style="font-size:8pt;" target="_blank">';
+                    $fl .= '&nbsp;<a href="'.$fpath.urlencode((string) $dbn).'" title="Backupfile: '.$dbn.'" style="font-size: 16px;" target="_blank" rel="noopener">';
                     $fl .= (('~unknown' == $db_backups[$i]['db']) ? $dbn : $db_backups[$i]['db']).'</a></td>';
-                    $fl .= '<td><a href="filemanagement.php?action=dl&amp;f='.urlencode($dbn).'" title="'.$lang['L_DOWNLOAD_FILE'].'" alt="'.$lang['L_DOWNLOAD_FILE'].'"><img src="'.$config['files']['iconpath'].'/openfile.gif"></a></td>';
+                    $fl .= '<td><a href="filemanagement.php?action=dl&amp;f='.urlencode((string) $dbn).'" title="'.$lang['L_DOWNLOAD_FILE'].'" alt="'.$lang['L_DOWNLOAD_FILE'].'"><img src="'.$config['files']['iconpath'].'/openfile.gif"></a></td>';
                 } else {
-                    $fl .= '&nbsp;<span style="font-size:8pt;">'.$db_backups[$i]['db'].'</span><td>&nbsp;</td></td>';
+                    $fl .= '&nbsp;<span style="font-size:16px;">'.$db_backups[$i]['db'].'</span><td>&nbsp;</td></td>';
                 }
 
-                $fl .= '<td class="sm" nowrap="nowrap" align="center">'.(('.gz' == substr($dbn, -3)) ? '<img src="'.$config['files']['iconpath'].'gz.gif" alt="'.$lang['L_COMPRESSED'].'" width="16" height="16" border="0">' : '&nbsp;').'</td>';
+                $fl .= '<td class="sm" nowrap="nowrap" align="center">'.((str_ends_with((string) $dbn, '.gz')) ? '<img src="'.$config['files']['iconpath'].'gz.gif" alt="'.$lang['L_COMPRESSED'].'" width="16" height="16" border="0">' : '&nbsp;').'</td>';
                 $fl .= '<td class="sm" nowrap="nowrap" align="center">'.$db_backups[$i]['script'].'</td>';
                 $fl .= '<td class="sm" nowrap="nowrap" align="right">'.(('' != $db_backups[$i]['kommentar']) ? '<img src="'.$config['files']['iconpath'].'rename.gif" alt="'.$db_backups[$i]['kommentar'].'" title="'.$db_backups[$i]['kommentar'].'" width="16" height="16" border="0">' : '&nbsp;').'</td>';
-                $fl .= '<td class="sm" nowrap="nowrap" align="left">'.(('' != $db_backups[$i]['kommentar']) ? nl2br(wordwrap($db_backups[$i]['kommentar'], 50)) : '&nbsp;').'</td>';
+                $fl .= '<td class="sm" nowrap="nowrap" align="left">'.(('' != $db_backups[$i]['kommentar']) ? nl2br(wordwrap((string) $db_backups[$i]['kommentar'], 50)) : '&nbsp;').'</td>';
 
                 $fl .= '<td class="sm" nowrap="nowrap">'.$db_backups[$i]['date'].'</td>';
                 $fl .= '<td style="text-align:center">';
@@ -241,8 +243,8 @@ function FileList($multi = 0)
                 $fl .= '</td><td  style="text-align:right;padding-right:12px;" nowrap="nowrap">';
                 $fl .= (-1 != $db_backups[$i]['eintraege']) ? $db_backups[$i]['tabellen'].' / '.number_format($db_backups[$i]['eintraege'], 0, ',', '.') : $lang['L_FM_OLDBACKUP'];
                 $fl .= '</td>';
-                $fl .= '<td style="font-size:8pt;text-align:right">'.byte_output($db_backups[$i]['size']).'</td>';
-                $fl .= '<td style="font-size:8pt;text-align:right">'.$db_backups[$i]['charset'].'</td>';
+                $fl .= '<td style="font-size:16px;text-align:right">'.byte_output($db_backups[$i]['size']).'</td>';
+                $fl .= '<td style="font-size:16px;text-align:right">'.$db_backups[$i]['charset'].'</td>';
                 $fl .= '</tr>';
 
                 if ($expand == $i) {
@@ -272,8 +274,8 @@ function FileList($multi = 0)
             $keyaus = ('~unknown' == $key) ? '<em>'.$lang['L_NO_MOD_BACKUPFILE'].'</em>' : $key;
             $fl .= '<tr class="'.$cl.'"><td colspan="5" align="left"><a href="'.$href.'&amp;dbactiv='.$key.'">'.$keyaus.'</a></td>';
             $fl .= '<td style="text-align:right">'.$val.'&nbsp;&nbsp;</td>';
-            $fl .= '<td class="sm" nowrap="nowrap">'.((isset($db_summary_last[$key])) ? $db_summary_last[$key] : '').'</td>';
-            $fl .= '<td style="text-align:right;font-size:8pt;" colspan="5">'.byte_output($db_summary_size[$key]).'&nbsp;</td>';
+            $fl .= '<td class="sm" nowrap="nowrap">'.($db_summary_last[$key] ?? '').'</td>';
+            $fl .= '<td style="text-align:right;font-size:16px;" colspan="5">'.byte_output($db_summary_size[$key]).'&nbsp;</td>';
             $fl .= '</tr>';
         }
     }
@@ -305,7 +307,7 @@ function FileList($multi = 0)
 function read_statusline_from_file($filename)
 {
     global $config;
-    if ('gz' == strtolower(substr($filename, -2))) {
+    if ('gz' == strtolower(substr((string) $filename, -2))) {
         $fp = gzopen($config['paths']['backup'].$filename, 'r');
         if (false === $fp) {
             exit('Can\'t open file '.$filename);
@@ -327,8 +329,8 @@ function read_statusline_from_file($filename)
 function PartListe($f, $nr)
 {
     global $config, $lang, $fpath;
-    $dateistamm = substr($f, 0, strrpos($f, 'part_')).'part_';
-    $dateiendung = ('gz' == substr(strtolower($f), -2)) ? '.sql.gz' : '.sql';
+    $dateistamm = substr((string) $f, 0, strrpos((string) $f, 'part_')).'part_';
+    $dateiendung = (str_ends_with(strtolower((string) $f), 'gz')) ? '.sql.gz' : '.sql';
     $s = '';
     for ($i = 1; $i <= $nr; ++$i) {
         if ($i > 1) {
@@ -347,7 +349,7 @@ function Converter($filesource, $filedestination, $cp)
     $filesize = 0;
     $max_filesize = 1024 * 1024 * 10; //10 MB splitsize
     $part = 1;
-    $cps = ('gz' == substr(strtolower($filesource), -2)) ? 1 : 0;
+    $cps = (str_ends_with(strtolower((string) $filesource), 'gz')) ? 1 : 0;
     $filedestination .= '_'.date('Y_m_d_H_i', time());
     echo '<h5>'.sprintf($lang['L_CONVERT_FILEREAD'], $filesource).'.....</h5><span style="font-size:10px;">';
     if (file_exists($config['paths']['backup'].$filedestination)) {
@@ -366,43 +368,43 @@ function Converter($filesource, $filedestination, $cp)
     $splitable = false; // can the file be splitted? Try to avoid splitting before a command is completed
     while (!$eof) {
         $eof = (1 == $cps) ? gzeof($f) : feof($f);
-        $zeile = (1 == $cps) ? gzgets($f, 5144000) : fgets($f, 5144000);
+        $zeile = (1 == $cps) ? gzgets($f, 5_144_000) : fgets($f, 5_144_000);
 
         $t = strtolower(substr($zeile, 0, 10));
         if ($t > '') {
             switch ($t) {
                 case 'insert int':
-                        // eine neue Insert Anweisung beginnt
-                        if (false === strpos($zeile, '(')) {
-                            //Feldnamen stehen in der naechsten Zeile - holen
-                            $zeile .= "\n\r";
-                            $zeile .= (1 == $cps) ? trim(gzgets($f, 8192)) : trim(fgets($f, 8192));
-                            $zeile .= ' ';
-                        }
+                    // eine neue Insert Anweisung beginnt
+                    if (!str_contains($zeile, '(')) {
+                        //Feldnamen stehen in der naechsten Zeile - holen
+                        $zeile .= "\n\r";
+                        $zeile .= (1 == $cps) ? trim((string) gzgets($f, 8192)) : trim((string) fgets($f, 8192));
+                        $zeile .= ' ';
+                    }
 
-                        // get INSERT-Satement
-                        $insert = substr($zeile, 0, strpos($zeile, '('));
-                        if ('VALUES ' != substr(strtoupper($insert), -7)) {
-                            $insert .= ' VALUES ';
-                        }
-                        $mode = 'insert';
-                        $zeile = "\n\r".$zeile;
-                        $splitable = false;
-                        break;
+                    // get INSERT-Satement
+                    $insert = substr($zeile, 0, strpos($zeile, '('));
+                    if (!str_ends_with(strtoupper($insert), 'VALUES ')) {
+                        $insert .= ' VALUES ';
+                    }
+                    $mode = 'insert';
+                    $zeile = "\n\r".$zeile;
+                    $splitable = false;
+                    break;
 
                 case 'create tab':
-                        $mode = 'create';
-                        while (';' != substr(rtrim($zeile), -1)) {
-                            $zeile .= fgets($f, 8192);
-                        }
-                        $zeile = "\n\r".MySQLi_Ticks($zeile)."\n\r";
-                        $splitable = true;
-                        break;
+                    $mode = 'create';
+                    while (!str_ends_with(rtrim($zeile), ';')) {
+                        $zeile .= fgets($f, 8192);
+                    }
+                    $zeile = "\n\r".MySQLi_Ticks($zeile)."\n\r";
+                    $splitable = true;
+                    break;
             }
         }
 
         if ('insert' == $mode) {
-            if (');' == substr(rtrim($zeile), strlen($zeile) - 3, 2)) {
+            if (');' == substr(rtrim($zeile), strlen($zeile ?? '') - 3, 2)) {
                 $splitable = true;
             }
 
@@ -422,7 +424,7 @@ function Converter($filesource, $filedestination, $cp)
                     $zeile = '';
                 } else {
                     fwrite($z, $zeile);
-                    echo '<br>Neue Datei.Zeile: <br>'.htmlspecialchars(substr($zeile, 0, 20)).'..'.htmlspecialchars(substr($zeile, strlen($zeile) - 41, 40)).'<br>';
+                    echo '<br>Neue Datei.Zeile: <br>'.htmlspecialchars(substr($zeile, 0, 20)).'..'.htmlspecialchars(substr($zeile, strlen($zeile ?? '') - 41, 40)).'<br>';
                     fclose($z);
                     $z = fopen($config['paths']['backup'].$filedestination.'_part_'.$part.'.sql', 'w');
                     $zeile = get_pseudo_statusline($part, $filedestination)."\r\n";
@@ -445,7 +447,7 @@ function Converter($filesource, $filedestination, $cp)
             $filesize = 0;
             $splitable = false;
         } else { // no, append to actual file
-            $filesize += strlen($zeile);
+            $filesize += strlen($zeile ?? '');
             if ($n > 600) {
                 $n = 0;
                 echo '<br>';
