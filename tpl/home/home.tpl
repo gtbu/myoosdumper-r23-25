@@ -1,29 +1,49 @@
 <h5>{L_STATUSINFORMATIONEN}</h5>
 <!-- BEGIN DIRECTORY_WARNINGS -->
-	{DIRECTORY_WARNINGS.MSD}
+	{DIRECTORY_WARNINGS.MSG}<br>
 <!-- END DIRECTORY_WARNINGS -->
 
+<!-- BEGIN NEW_VERSION_EXISTS -->
+	<br>
+	<span class="error">{L_NEW_MOD_VERSION_INFO}</span><br>
+	<span class="warnung"><strong>{L_UPDATED_IMPORTANT}</strong></span><br>
+	<br>
+	<a href="main.php?action=update" class="Formbutton">{L_UPDATE}</a><br>
+	<br>
+<!-- END NEW_VERSION_EXISTS -->
+
+<!-- BEGIN DIRECTORY_PROTECTION_STATUS -->
+	{DIRECTORY_PROTECTION_STATUS.MSG}<br>
+<!-- END DIRECTORY_PROTECTION_STATUS -->
+
+<!-- BEGIN DIRECTORY_PROTECTION_STATUS_ERROR -->
+	<span class="error">{DIRECTORY_PROTECTION_STATUS_ERROR.MSG}</span><br>
+<!-- END DIRECTORY_PROTECTION_STATUS_ERROR -->
+
 <!-- BEGIN HTACCESS_EXISTS -->
+	<br>
 	<a href="main.php?action=edithtaccess" class="Formbutton">{L_HTACC_EDIT}</a>&nbsp;
-	<a href="main.php?action=deletehtaccess" class="Formbutton">{L_DELETE_HTACCESS}</a><br>
+	<a href="main.php?action=deletehtaccess" class="Formbutton" onclick="if (!confirm('{L_HTACC_CONFIRM_DELETE}')) return false;">{L_DELETE_HTACCESS}</a><br>
 <!-- END HTACCESS_EXISTS -->
 
 <!-- BEGIN HTACCESS_DOESNT_EXISTS -->
-	<span class="error">{L_HTACC_PROPOSED}:</span>&nbsp;&nbsp;
+	<br>
 	<a href="main.php?action=schutz" class="Formbutton">{L_HTACC_CREATE}</a><br>
 <!-- END HTACCESS_DOESNT_EXISTS -->
 
 <h6>{L_VERSIONSINFORMATIONEN}</h6>
 <img src="css/{THEME}/pics/loveyourdata.gif" align="right" alt="love your data" title="love your data">
-{L_MSD_VERSION}: <strong>{MSD_VERSION}</strong><br>
+{L_MOD_VERSION}: <strong>{MOD_VERSION}</strong><br>
+
+<!-- BEGIN UPDATE_INFO -->
+	<span class="error">{UPDATE_INFO.MSG}</span><br>
+<!-- END UPDATE_INFO -->
+
 {L_OS}: <strong>{OS}</strong> ({OS_EXT})<br>
 {L_MYSQL_VERSION}: <strong>{MYSQL_VERSION}</strong><br>
 {L_PHP_VERSION}: <strong>{PHP_VERSION}</strong>&nbsp;&nbsp;{L_MEMORY}: <strong>{MEMORY}</strong>&nbsp;&nbsp;
 {L_MAX_EXECUTION_TIME}: <strong>{MAX_EXECUTION_TIME} {L_SECONDS}</strong>&nbsp;&nbsp;
 <a href="main.php?action=phpinfo" class="Formbutton">PHP-Info</a><br>
-<!-- BEGIN ZLIBBUG -->
-	<span class="error">{L_PHPBUG}</span><br>
-<!-- END ZLIBBUG -->
 
 <!-- BEGIN NO_FTP -->
 	<span class="error">{L_NOFTPPOSSIBLE}</span><br>
@@ -41,8 +61,8 @@
 
 <br clear="all">
 
-<h6>{L_MSD_INFO}</h6>
-{L_INFO_LOCATION} "<b>{SERVER_NAME}</b>" ({MSD_PATH})<br>
+<h6>{L_MOD_INFO}</h6>
+{L_INFO_LOCATION} "<b>{SERVER_NAME}</b>" ({MOD_PATH})<br>
 {L_INFO_ACTDB}: <strong>{DB}</strong><br>
 {L_BACKUPFILESANZAHL} <strong>{NR_OF_BACKUP_FILES}</strong>
 {L_BACKUPS} (<strong>{SIZE_BACKUPS}</strong>)<br>

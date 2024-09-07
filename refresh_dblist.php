@@ -1,25 +1,43 @@
 <?php
-// Konfigurationsdateien, die aktualisiert werden sollen
-// configurations to update
-// mehrere Dateien so angeben | enter more than one configurationsfile like this
-// $configurationfiles=array('mysqldumper','db2');
-/////////////////////////////////////////////////////////////////////////
-$configurationfiles=array(
-						'mysqldumper'
-);
+/* ----------------------------------------------------------------------
 
-define('APPLICATION_PATH',realpath(dirname(__FILE__)));
-chdir(APPLICATION_PATH);
-include_once ( APPLICATION_PATH . '/inc/functions.php' );
-$config['language']='en';
-$config['theme']="msd";
-$config['files']['iconpath']='css/' . $config['theme'] . '/icons/';
+   MyOOS [Dumper]
+   http://www.oos-shop.de/
 
-foreach ($configurationfiles as $conf)
-{
-	$config['config_file']=$conf;
-	include ( $config['paths']['config'] . $conf . '.php' );
-	GetLanguageArray();
-	SetDefault();
+   Copyright (c) 2013 - 2022 by the MyOOS Development Team.
+   ----------------------------------------------------------------------
+   Based on:
+
+   MySqlDumper
+   http://www.mysqldumper.de
+
+   Copyright (C)2004-2011 Daniel Schlichtholz (admin@mysqldumper.de)
+   ----------------------------------------------------------------------
+   Released under the GNU General Public License
+   ---------------------------------------------------------------------- */
+
+/**
+ * configurations to update.
+ *
+ * enter more than one configurationsfile like this
+ * $configurationfiles=array('myoosdumper','db2');
+ */
+$configurationfiles = [
+                        'myoosdumper',
+];
+
+define('OOS_VALID_MOD', true);
+
+define('APPLICATION_PATH', '/' == dirname(__FILE__) ? '' : dirname(__FILE__));
+include_once APPLICATION_PATH.'/inc/functions.php';
+
+$config['language'] = 'en';
+$config['theme'] = 'mod';
+$config['files']['iconpath'] = 'css/'.$config['theme'].'/icons/';
+
+foreach ($configurationfiles as $conf) {
+    $config['config_file'] = $conf;
+    include $config['paths']['config'].$conf.'.php';
+    GetLanguageArray();
+    SetDefault();
 }
-?>
