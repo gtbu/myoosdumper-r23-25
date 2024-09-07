@@ -14,7 +14,7 @@ Requirements
 Installation
 ------------
 
-1. [Download MyOOS [Dumper]](https://github.com/r23/MyOOS-Dumper/releases)
+1. [Download MyOOS [Dumper]](https://github.com/r23/myoosdumper/releases)
 2. Unzip the downloaded zip file 
 3. Extract the file into an empty directory and upload everything from the directory Myoos-Dumper to the server.
 4. Go to install.php with your browser. The installation routine guides you through the individual steps and helps you to create the access data and database. 
