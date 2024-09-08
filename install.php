@@ -91,10 +91,9 @@ header('content-type: text/html; charset=utf-8');
     <meta name="robots" content="noindex,nofollow">
     <meta http-equiv="cache-control" content="must-revalidate">
     <title>MyOOS [Dumper]  - Installation</title>
-
-    <link rel="stylesheet" type="text/css" href="css/mod/style.css">
-    <script src="js/script.js" type="text/javascript"></script>
-<style type="text/css" media="screen">
+    <link rel="stylesheet" href="css/mod/style.css">
+    <script src="js/script.js"></script>
+<style media="screen">
 td {
     border: 1px solid #ddd;
 }
@@ -445,19 +444,18 @@ switch ($phase) {
 
 </div>
 </body>
-</html>
+</html><?php
 
-
-<?php
-
-//eigene Funktionen
-// rec_rmdir - loesche ein Verzeichnis rekursiv
-// Rueckgabewerte:
-//   0  - alles ok
-//   -1 - kein Verzeichnis
-//   -2 - Fehler beim Loeschen
-//   -3 - Ein Eintrag eines Verzeichnisses war keine Datei und kein Verzeichnis und
-//        kein Link
+/**
+ * eigene Funktionen
+ * rec_rmdir - loesche ein Verzeichnis rekursiv
+ * Rueckgabewerte:
+ *   0  - alles ok
+ *   -1 - kein Verzeichnis
+ *  -2 - Fehler beim Loeschen
+ *   -3 - Ein Eintrag eines Verzeichnisses war keine Datei und kein Verzeichnis und
+ *        kein Link
+ */
 function rec_rmdir($path)
 {
     global $paths;
