@@ -24,7 +24,7 @@ Documentation
 -------------
 
 ### MyOOS [Dumper]
-Use your browser to open the [doku.oos-shop.de](https://doku.oos-shop.de/myoos-benutzerhandbuch/ueber-myoos/eine-einfuehrung-in-das-myoos-shopsystem/ueber-mysqldumper/) page for links to documentation.
+Use your browser to open the [doku.oos-shop.de](https://doku.oos-shop.de/myoos-benutzerhandbuch/ueber-myoos-dumper/) page for links to documentation.
 
 
 Support
@@ -43,7 +43,7 @@ Do you have any suggestions for improvement? Feel free to contact the developmen
 Contribute
 -------------
 If you would like to help us improve the MyOOS project, we welcome your pull requests via GitHub here.
-https://github.com/r23/MyOOS-Dumper
+https://github.com/r23/myoosdumper/
 
 
 License
