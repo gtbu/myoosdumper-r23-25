@@ -33,6 +33,9 @@ $config['dbuser'] = 'root';
 //User-Pass. For no Password leave empty
 $config['dbpass'] = '';
 
+// The database character set
+$config['dbcharset'] = 'utf8mb4';
+
 //Speed Values between 50 and 1000000
 //use low values if you have bad connection or slow machines
 $config['minspeed'] = 100;

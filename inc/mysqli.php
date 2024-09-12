@@ -265,7 +265,7 @@ $mysql_SQLhasRecords = [
                         'DESC',
 ];
 
-function mod_mysqli_connect($encoding = 'utf8mb4', $keycheck_off = false, $actual_table = '')
+function mod_mysqli_connect($dbcharset = 'utf8mb4', $keycheck_off = false, $actual_table = '')
 {
     global $config, $databases;
 
@@ -273,8 +273,10 @@ function mod_mysqli_connect($encoding = 'utf8mb4', $keycheck_off = false, $actua
         return $config['dbconnection'];
     }
 
+	$dbcharset = (isset($config['dbcharset']) && !empty($config['dbcharset'])) ? ':'.$config['dbcharset'] : 'utf8mb4';
     $port = (isset($config['dbport']) && !empty($config['dbport'])) ? ':'.$config['dbport'] : '';
     $socket = (isset($config['dbsocket']) && !empty($config['dbsocket'])) ? ':'.$config['dbsocket'] : '';
+
 
     // Forcing error reporting mode to OFF, which is no longer the default
     // starting with PHP 8.1
@@ -293,8 +295,8 @@ function mod_mysqli_connect($encoding = 'utf8mb4', $keycheck_off = false, $actua
         get_sql_encodings();
     }
 
-    if ($config['mysql_standard_character_set'] != $encoding) {
-        $set_encoding = mysqli_query($config['dbconnection'], 'SET NAMES \''.$encoding.'\'');
+    if ($config['mysql_standard_character_set'] != $dbcharset) {
+        $set_encoding = mysqli_query($config['dbconnection'], 'SET NAMES \''.$dbcharset.'\'');
         if (false === $set_encoding) {
             $config['mysql_can_change_encoding'] = false;
         } else {

@@ -20,23 +20,80 @@
 
 define('OOS_VALID_MOD', true);
 
+require 'vendor/autoload.php';
+
+use SecureInput\InputHandler;
+
+
 if (!@ob_start('ob_gzhandler')) {
     @ob_start();
 }
 global $config;
 
+/*
 $install_ftp_server = $install_ftp_user_name = $install_ftp_user_pass = $install_ftp_path = '';
-$dbhost = $dbuser = $dbpass = $dbport = $dbsocket = $manual_db = '';
+$dbhost = $dbuser = $dbpass = $dbcharset = $dbport = $dbsocket = $manual_db = '';
+
 foreach ($_GET as $getvar => $getval) {
     ${$getvar} = $getval;
 }
+*/
+$inputHandler = new InputHandler($_GET);
+
+$install_ftp_server = $inputHandler->get('install_ftp_server', '');
+$install_ftp_user_name = $inputHandler->get('install_ftp_user_name', '');
+$install_ftp_user_pass = $inputHandler->get('install_ftp_user_pass', '');
+$install_ftp_path = $inputHandler->get('install_ftp_path', 'install_ftp_path');
+
+$dbhost = $inputHandler->get('dbhost', '');
+$dbuser = $inputHandler->get('dbuser', '');
+$dbpass = $inputHandler->get('dbpass', '');
+$dbcharset = $inputHandler->get('dbcharset', 'utf8mb4');
+$dbport = $inputHandler->get('dbport', '');
+$dbsocket = $inputHandler->get('dbsocket', '');
+$manual_db = $inputHandler->get('manual_db', '');
+
+
+$phase = $inputHandler->get('phase', 0);
+$connstr = $inputHandler->get('connstr', '');
+$language = $inputHandler->get('language', 'en');
+
+/*
 foreach ($_POST as $postvar => $postval) {
     ${$postvar} = $postval;
 }
+*/
+
+$inputHandler = new InputHandler($_POST);
+
+$install_ftp_server = $inputHandler->get('install_ftp_server', '');
+$install_ftp_user_name = $inputHandler->get('install_ftp_user_name', '');
+$install_ftp_user_pass = $inputHandler->get('install_ftp_user_pass', '');
+$install_ftp_path = $inputHandler->get('install_ftp_path', 'install_ftp_path');
+
+$dbhost = $inputHandler->get('dbhost', '');
+$dbuser = $inputHandler->get('dbuser', '');
+$dbpass = $inputHandler->get('dbpass', '');
+$dbcharset = $inputHandler->get('dbcharset', 'utf8mb4');
+$dbport = $inputHandler->get('dbport', '');
+$dbsocket = $inputHandler->get('dbsocket', '');
+$manual_db = $inputHandler->get('manual_db', '');
+$dbconnect = $inputHandler->get('dbconnect', '');
+
+$connstr = $inputHandler->get('connstr', '');
+
 require_once './inc/functions.php';
 require_once './inc/mysqli.php';
 require_once './inc/runtime.php';
+/*
 if (!isset($language)) {
+    $language = 'en';
+}
+*/
+
+GetLanguageArray();
+
+if (!in_array($language, $lang['languages'])) {
     $language = 'en';
 }
 
@@ -51,6 +108,7 @@ if (isset($_POST['dbhost'])) {
     $config['dbhost'] = $dbhost;
     $config['dbuser'] = $dbuser;
     $config['dbpass'] = $dbpass;
+	$config['dbcharset'] = $dbcharset;
     $config['dbport'] = $dbport;
     $config['dbsocket'] = $dbsocket;
     $config['manual_db'] = $manual_db;
@@ -61,9 +119,10 @@ if (isset($_POST['dbhost'])) {
         $dbhost = $config['dbhost'] = $p[0];
         $dbuser = $config['dbuser'] = $p[1];
         $dbpass = $config['dbpass'] = $p[2];
-        $dbport = $config['dbport'] = $p[3];
-        $dbsocket = $config['dbsocket'] = $p[4];
-        $manual_db = $config['manual_db'] = $p[5];
+		$dbcharset = $config['dbcharset'] = $p[3];
+        $dbport = $config['dbport'] = $p[4];
+        $dbsocket = $config['dbsocket'] = $p[5];
+        $manual_db = $config['manual_db'] = $p[6];
     } else {
         $connstr = '';
     }
@@ -74,7 +133,7 @@ $phase ??= 0;
 if (isset($_POST['manual_db'])) {
     $manual_db = trim((string) $_POST['manual_db']);
 }
-$connstr = "$dbhost|$dbuser|$dbpass|$dbport|$dbsocket|$manual_db";
+$connstr = "$dbhost|$dbuser|$dbpass|$dbcharset|$dbport|$dbsocket|$manual_db";
 $connection = '';
 $delfiles = [];
 
@@ -157,8 +216,8 @@ switch ($phase) {
 
         echo '<form action="install.php" method="get"><input type="hidden" name="phase" value="1">';
         echo '<table class="bdr"><tr class="thead"><th>Language</th><th>Tools</th></tr>';
-        echo '<tr><td valign="top" width="300"><table>';
-        echo GetLanguageCombo('radio', 'radio', 'language', '<tr><td>', '</td></tr>');
+        echo '<tr><td valign="top" width="300"><table>';	
+        echo GetLanguageCombo('radio', 'radio-custom', 'language', '<tr><td>', '</td></tr>');
         echo '</table></td><td valign="top">';
 
         foreach ($lang['languages'] as $key) {
@@ -208,7 +267,12 @@ switch ($phase) {
                         $config['dbpass'] = extractValue($tmp[$i]);
                         $dbpass = $config['dbpass'];
                         ++$stored;
-                    }
+                    }			
+                    if (str_starts_with($tmp[$i], '$config[\'dbcharset\']')) {
+                        $config['dbcharset'] = extractValue($tmp[$i]);
+                        $dbcharset = $config['dbcharset'];
+                        ++$stored;
+                    }									
                     if (str_starts_with($tmp[$i], '$config[\'language\']')) {
                         $config['language'] = extractValue($tmp[$i]);
                         ++$stored;
@@ -219,6 +283,9 @@ switch ($phase) {
                 }
             }
 
+            if (!isset($config['dbcharset'])) {
+                $config['dbcharset'] = 'utf8mb4';
+            }
             if (!isset($config['dbport'])) {
                 $config['dbport'] = '';
             }
@@ -231,6 +298,7 @@ switch ($phase) {
             echo '<tr><td>'.$lang['L_DB_HOST'].':</td><td><input type="text" name="dbhost" value="'.$dbhost.'" size="60" maxlength="100"></td></tr>';
             echo '<tr><td>'.$lang['L_DB_USER'].':</td><td><input type="text" name="dbuser" value="'.$dbuser.'" size="60" maxlength="100"></td></tr>';
             echo '<tr><td>'.$lang['L_DB_PASS'].':</td><td><input type="password" name="dbpass" value="'.$dbpass.'" size="60" maxlength="100"></td></tr>';
+			echo '<tr><td>'.$lang['L_DB_CHARSET'].':</td><td><input type="text" name="dbcharset" value="'.$dbcharset.'" size="60" maxlength="100"></td></tr>';		
             echo '<tr><td>* '.$lang['L_DB'].':<p class="small">('.$lang['L_ENTER_DB_INFO'].')</p></td><td><input type="text" name="manual_db" value="'.$manual_db.'" size="60" maxlength="100"></td></tr>';
             echo '<tr><td>';
             echo $lang['L_PORT'].':</td><td><input type="text" name="dbport" value="'.$dbport.'" size="5" maxlength="5">&nbsp;&nbsp;'.$lang['L_INSTALL_HELP_PORT'].'</td></tr>';
@@ -248,7 +316,7 @@ switch ($phase) {
                     $databases = [];
                     echo '<p class="success">'.$lang['L_CONNECTION_OK'].'</p><span class="ssmall">';
                     $connection = 'ok';
-                    $connstr = "$dbhost|$dbuser|$dbpass|$dbport|$dbsocket|$manual_db";
+                    $connstr = "$dbhost|$dbuser|$dbpass|$dbcharset|$dbport|$dbsocket|$manual_db";
                     echo '<input type="hidden" name="connstr" value="'.$connstr.'">';
                     if ($manual_db > '') {
                         SearchDatabases(1, $manual_db);
@@ -274,6 +342,7 @@ switch ($phase) {
                 echo '<input type="hidden" name="dbhost" value="'.$config['dbhost'].'">
 			<input type="hidden" name="dbuser" value="'.$config['dbuser'].'">
 			<input type="hidden" name="dbpass" value="'.$config['dbpass'].'">
+			<input type="hidden" name="dbcharset" value="'.$config['dbcharset'].'">
 			<input type="hidden" name="manual_db" value="'.$manual_db.'">
 			<input type="hidden" name="dbport" value="'.$config['dbport'].'">
 			<input type="hidden" name="dbsocket" value="'.$config['dbsocket'].'">
@@ -308,8 +377,12 @@ switch ($phase) {
                 $tmp[$i] = '$config[\'dbpass\'] = \''.$dbpass.'\';'."\n";
                 ++$stored;
             }
+            if (str_starts_with($tmp[$i], '$config[\'dbcharset\']')) {
+                $tmp[$i] = '$config[\'dbcharset\'] = \''.$dbcharset.'\';'."\n";
+                ++$stored;
+            }			
 
-            if (6 == $stored) {
+            if (7 == $stored) {
                 break;
             }
         }
