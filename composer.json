@@ -20,5 +20,12 @@
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest"
+    },
+    "name": "inputhandler/secure-input",
+    "description": "A class for secure handling of GET and POST variables",
+    "autoload": {
+        "psr-4": {
+            "SecureInput\\": "src/"
+        }
     }
 }
