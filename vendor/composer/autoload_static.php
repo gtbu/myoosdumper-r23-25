@@ -20,6 +20,10 @@ class ComposerStaticIniteb53150efbf65b69a7c10f070ed59d53
         array (
             'VisualAppeal\\' => 13,
         ),
+        'S' => 
+        array (
+            'SecureInput\\' => 12,
+        ),
         'P' => 
         array (
             'Psr\\SimpleCache\\' => 16,
@@ -56,6 +60,10 @@ class ComposerStaticIniteb53150efbf65b69a7c10f070ed59d53
         'VisualAppeal\\' => 
         array (
             0 => __DIR__ . '/..' . '/visualappeal/php-auto-update/src',
+        ),
+        'SecureInput\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/src',
         ),
         'Psr\\SimpleCache\\' => 
         array (

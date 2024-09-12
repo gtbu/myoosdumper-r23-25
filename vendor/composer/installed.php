@@ -1,24 +1,15 @@
 <?php return array(
     'root' => array(
-        'name' => '__root__',
+        'name' => 'inputhandler/secure-input',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'a1447d42b4a6b59cb327bfaf2d0e121cc609006e',
+        'reference' => 'd6c1400039b85a5a03afe74e4eba88fa2ec8d39e',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
-        '__root__' => array(
-            'pretty_version' => 'dev-main',
-            'version' => 'dev-main',
-            'reference' => 'a1447d42b4a6b59cb327bfaf2d0e121cc609006e',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../../',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
         'composer/semver' => array(
             'pretty_version' => '3.4.2',
             'version' => '3.4.2.0',
@@ -34,6 +25,15 @@
             'reference' => '0b8f985d09abfc04a2c1535943f6f07b7206161a',
             'type' => 'library',
             'install_path' => __DIR__ . '/../desarrolla2/cache',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'inputhandler/secure-input' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'd6c1400039b85a5a03afe74e4eba88fa2ec8d39e',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
             'dev_requirement' => false,
         ),

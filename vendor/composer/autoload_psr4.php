@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'phpseclib3\\' => array($vendorDir . '/phpseclib/phpseclib/phpseclib'),
     'VisualAppeal\\' => array($vendorDir . '/visualappeal/php-auto-update/src'),
+    'SecureInput\\' => array($baseDir . '/src'),
     'Psr\\SimpleCache\\' => array($vendorDir . '/psr/simple-cache/src'),
     'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
     'ParagonIE\\ConstantTime\\' => array($vendorDir . '/paragonie/constant_time_encoding/src'),
