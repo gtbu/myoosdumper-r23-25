@@ -37,6 +37,7 @@ $lang['L_BACK'] = 'geri';
 $lang['L_DB_HOST'] = 'Veritabanı sunucusunun adı';
 $lang['L_DB_USER'] = 'Veritabanı kullanıcısı';
 $lang['L_DB_PASS'] = 'Veritabanı şifresi';
+$lang['L_DB_CHARSET'] = 'Veritabanı karakter seti';
 $lang['L_INFO_SCRIPTDIR'] = 'MyOOS [Dumper] Veriyolu';
 $lang['L_INFO_ACTDB'] = 'Geçerli Veritabanı';
 $lang['L_WRONGCONNECTIONPARS'] = 'Bağlantı parametreleri verilmemiş veya hatalı!';

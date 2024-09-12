@@ -37,6 +37,7 @@ $lang['L_BACK'] = 'back';
 $lang['L_DB_HOST'] = 'Hostname';
 $lang['L_DB_USER'] = 'User';
 $lang['L_DB_PASS'] = 'Password';
+$lang['L_DB_CHARSET'] = 'Database character set';
 $lang['L_INFO_SCRIPTDIR'] = 'MyOOS [Dumper] directory';
 $lang['L_INFO_ACTDB'] = 'Selected Database';
 $lang['L_WRONGCONNECTIONPARS'] = 'Connection parameters wrong or missing!';

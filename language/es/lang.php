@@ -37,6 +37,7 @@ $lang['L_BACK'] = 'atrás';
 $lang['L_DB_HOST'] = 'Host';
 $lang['L_DB_USER'] = 'Usuario';
 $lang['L_DB_PASS'] = 'Password';
+$lang['L_DB_CHARSET'] = 'Juego de caracteres de la base de datos';
 $lang['L_INFO_SCRIPTDIR'] = 'Directorio de MyOOS [Dumper]';
 $lang['L_INFO_ACTDB'] = 'Base de datos actual';
 $lang['L_WRONGCONNECTIONPARS'] = 'Conexión errónea o sin parámetros !';

@@ -37,6 +37,7 @@ $lang['L_BACK'] = 'quay lại';
 $lang['L_DB_HOST'] = 'Hostname';
 $lang['L_DB_USER'] = 'User';
 $lang['L_DB_PASS'] = 'Password';
+$lang['L_DB_CHARSET'] = 'Database character set';
 $lang['L_INFO_SCRIPTDIR'] = 'Thư mục chứa MyOOS [Dumper]';
 $lang['L_INFO_ACTDB'] = 'Cơ sở dữ liệu hiện hành';
 $lang['L_WRONGCONNECTIONPARS'] = 'Thông số kết nối sai hoặc thiếu!';

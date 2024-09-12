@@ -37,6 +37,7 @@ $lang['L_BACK'] = 'πίσω';
 $lang['L_DB_HOST'] = 'Ονομα Host';
 $lang['L_DB_USER'] = 'χρήστης';
 $lang['L_DB_PASS'] = 'κωδικός';
+$lang['L_DB_CHARSET'] = 'Σύνολο χαρακτήρων βάσης δεδομένων';
 $lang['L_INFO_SCRIPTDIR'] = 'Κατάλογος του MyOOS [Dumper]';
 $lang['L_INFO_ACTDB'] = 'Παρούσα Β.Δεδομένων';
 $lang['L_WRONGCONNECTIONPARS'] = 'Λάθος ή καμία παράμετρος σύνδεσης!';

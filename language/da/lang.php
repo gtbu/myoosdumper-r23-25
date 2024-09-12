@@ -37,6 +37,7 @@ $lang['L_BACK'] = 'tilbage';
 $lang['L_DB_HOST'] = 'Hostnavn';
 $lang['L_DB_USER'] = 'Bruger';
 $lang['L_DB_PASS'] = 'Kodeord';
+$lang['L_DB_CHARSET'] = 'Databasens tegnsæt';
 $lang['L_INFO_SCRIPTDIR'] = 'MyOOS [Dumper] folder';
 $lang['L_INFO_ACTDB'] = 'Aktuel Database';
 $lang['L_WRONGCONNECTIONPARS'] = 'Forkerte eller manglende forbindelsesparametre!';

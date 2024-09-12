@@ -37,6 +37,7 @@ $lang['L_BACK'] = 'للخلف';
 $lang['L_DB_HOST'] = 'اسم المضيف';
 $lang['L_DB_USER'] = 'اسم قاعدة البيانات';
 $lang['L_DB_PASS'] = 'كلمة مرور مستخدم قاعدة البيانات';
+$lang['L_DB_CHARSET'] = 'مجموعة أحرف قاعدة البياناتt';
 $lang['L_INFO_SCRIPTDIR'] = 'دليل مخطوطةMyOOS [Dumper]';
 $lang['L_INFO_ACTDB'] = 'قاعدة البيانات الفعلية';
 $lang['L_WRONGCONNECTIONPARS'] = 'مشكلة او لا يوجد ربط !';

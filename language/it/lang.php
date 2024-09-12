@@ -37,6 +37,7 @@ $lang['L_BACK'] = 'indietro';
 $lang['L_DB_HOST'] = 'Hostname del database';
 $lang['L_DB_USER'] = 'User del database';
 $lang['L_DB_PASS'] = 'Password del database';
+$lang['L_DB_CHARSET'] = 'Set di caratteri del database';
 $lang['L_INFO_SCRIPTDIR'] = 'Indice di MyOOS [Dumper]';
 $lang['L_INFO_ACTDB'] = 'Database selezionato';
 $lang['L_WRONGCONNECTIONPARS'] = 'Parametri di connessione assenti o errati!';

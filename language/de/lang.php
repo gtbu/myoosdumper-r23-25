@@ -37,6 +37,7 @@ $lang['L_BACK'] = 'zurück';
 $lang['L_DB_HOST'] = 'Datenbank-Hostname';
 $lang['L_DB_USER'] = 'Datenbank-Benutzer';
 $lang['L_DB_PASS'] = 'Datenbank-Passwort';
+$lang['L_DB_CHARSET'] = 'Datenbank-Zeichensatz';
 $lang['L_INFO_SCRIPTDIR'] = 'Verzeichnis von MyOOS [Dumper]';
 $lang['L_INFO_ACTDB'] = 'Aktuelle Datenbank';
 $lang['L_WRONGCONNECTIONPARS'] = 'Falsche oder keine Verbindungsparameter!';
