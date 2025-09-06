@@ -14,10 +14,11 @@ Requirements
 Installation
 ------------
 
-1. [Download MyOOS [Dumper]](https://github.com/r23/myoosdumper/releases)
-2. Unzip the downloaded zip file 
-3. Extract the file into an empty directory and upload everything from the directory Myoos-Dumper to the server.
-4. Go to install.php with your browser. The installation routine guides you through the individual steps and helps you to create the access data and database. 
+1. [Download MyOOS [Dumper]](https://github.com/r23/myoosdumper/releases) - version 5.0.25 is online again since 2024 :
+2. A new improved version is at <a href="https://www.phpbb3-support.square7.ch/viewtopic.php?t=899&start=10" target=_blank> phpbb333-support</a>
+3. Unzip the downloaded zip file 
+4. Extract the file into an empty directory and upload everything from the directory Myoos-Dumper to the server.
+5. Go to install.php with your browser. The installation routine guides you through the individual steps and helps you to create the access data and database. 
 
 
 Documentation
